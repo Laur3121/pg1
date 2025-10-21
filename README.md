@@ -1,3 +1,8 @@
+# 実行コマンド
+```commandline
+.\gradlew lwjgl3:run 
+```
+
 # adventure_rpg
 
 A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
