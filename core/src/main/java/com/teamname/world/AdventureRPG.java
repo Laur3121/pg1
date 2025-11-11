@@ -1,32 +1,28 @@
 package com.teamname.world;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.Game;
+import com.teamname.world.combat.CombatScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class AdventureRPG extends ApplicationAdapter {
-    private SpriteBatch batch;
-    private Texture image;
+public class AdventureRPG extends Game {
 
     @Override
     public void create() {
-        batch = new SpriteBatch();
-        image = new Texture("libgdx.png");
-    }
+        // Launch combat screen on startup
+        System.out.println("\n========================================");
+        System.out.println("   AdventureRPG Starting");
+        System.out.println("   Launching Combat Screen...");
+        System.out.println("========================================\n");
 
-    @Override
-    public void render() {
-        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
-        batch.begin();
-        batch.draw(image, 140, 210);
-        batch.end();
+        // Set combat screen as the active screen
+        setScreen(new CombatScreen());
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
-        image.dispose();
+        super.dispose();
+        if (getScreen() != null) {
+            getScreen().dispose();
+        }
     }
 }
