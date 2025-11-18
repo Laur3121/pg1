@@ -1,28 +1,50 @@
 package com.teamname.world;
 
-import com.badlogic.gdx.Game;
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input; // テスト用のキー入力に必要
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.teamname.world.combat.CombatScreen;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class AdventureRPG extends Game {
+public class AdventureRPG extends ApplicationAdapter {
+    private SpriteBatch batch;
+    private Texture image;
+    private CombatScreen combatScreen;    // 戦闘画面
+    // フラグ変数 (0: マップ/通常, 1: 戦闘)
+    public int battleflag = 0;
 
     @Override
     public void create() {
-        // Launch combat screen on startup
-        System.out.println("\n========================================");
-        System.out.println("   AdventureRPG Starting");
-        System.out.println("   Launching Combat Screen...");
-        System.out.println("========================================\n");
+        batch = new SpriteBatch();
+        image = new Texture("libgdx.png");
+        combatScreen = new CombatScreen();  // 戦闘画面の初期化
+    }
 
-        // Set combat screen as the active screen
-        setScreen(new CombatScreen());
+    @Override
+    public void render() {
+        // フラグによる分岐処理
+        if (battleflag == 0) {
+            ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
+            batch.begin();
+            batch.draw(image, 140, 210);
+            batch.end();
+
+        }else if (battleflag == 1) {
+            combatScreen.render(Gdx.graphics.getDeltaTime());
+        }
     }
 
     @Override
     public void dispose() {
-        super.dispose();
-        if (getScreen() != null) {
-            getScreen().dispose();
+        // プログラム1のリソース破棄
+        batch.dispose();
+        image.dispose();
+
+        // プログラム2のリソース破棄
+        if (combatScreen != null) {
+            combatScreen.dispose();
         }
     }
 }
