@@ -1,0 +1,14 @@
+{ "columns":4,
+ "image":"..\/Downloads\/split_assets\/part_3.png",
+ "imageheight":193,
+ "imagewidth":139,
+ "margin":0,
+ "name":"\u5bb6",
+ "spacing":0,
+ "tilecount":24,
+ "tiledversion":"1.11.2",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.10"
+}
