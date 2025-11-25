@@ -6,20 +6,20 @@ import com.badlogic.gdx.Input; // テスト用のキー入力に必要
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.teamname.world.combat.CombatScreen;
+import com.teamname.world.combat.VisualCombatScreen;
 
 public class AdventureRPG extends ApplicationAdapter {
     private SpriteBatch batch;
     private Texture image;
-    private CombatScreen combatScreen;    // 戦闘画面
+    private VisualCombatScreen combatScreen;    // 戦闘画面
     // フラグ変数 (0: マップ/通常, 1: 戦闘)
-    public int battleflag = 0;
+    public int battleflag = 1;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
         image = new Texture("libgdx.png");
-        combatScreen = new CombatScreen();  // 戦闘画面の初期化
+        combatScreen = new VisualCombatScreen();  // 戦闘画面の初期化
     }
 
     @Override
