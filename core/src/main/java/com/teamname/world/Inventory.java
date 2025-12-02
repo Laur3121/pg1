@@ -52,6 +52,9 @@ public class Inventory {
         System.out.println("-----------------");
     }
 
+    public ArrayList<Item> getItems() {
+        return items;
+    }
     // 将来的には以下のメソッドも必要になります
     // public void removeItem(int itemId, int quantity) { ... }
     // public boolean hasItem(int itemId) { ... }
