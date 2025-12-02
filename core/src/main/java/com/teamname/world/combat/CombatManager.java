@@ -77,9 +77,9 @@ public class CombatManager {
         // 最初のターンを開始
         nextTurn();
 
-        System.out.println("===== START! =====");
-        System.out.println("you: " + party.size() + "people");
-        System.out.println("enemy: " + enemies.size() + "people");
+        //System.out.println("===== START! =====");
+        //System.out.println("you: " + party.size() + "people");
+        //System.out.println("enemy: " + enemies.size() + "people");
     }
 
     /**
@@ -102,7 +102,7 @@ public class CombatManager {
         }
 
         if (currentActor != null) {
-            System.out.println("\n--- " + currentActor.getName() + "no ta-nn ---");
+            //System.out.println("\n--- " + currentActor.getName() + "no ta-nn ---");
         }
     }
 
@@ -114,21 +114,21 @@ public class CombatManager {
      */
     public void applyAction(ICombatant actor, CombatAction action, List<ICombatant> targets) {
         if (battleState != BattleState.IN_PROGRESS) {
-            System.out.println("tatakaityuujanaiyo");
+            //System.out.println("tatakaityuujanaiyo");
             return;
         }
 
         if (actor != currentActor) {
-            System.out.println("This calactor dont turn");
+            //System.out.println("This calactor dont turn");
             return;
         }
 
         if (!actor.isAlive()) {
-            System.out.println(actor.getName() + " dont action");
+            //System.out.println(actor.getName() + " dont action");
             return;
         }
 
-        System.out.println(actor.getName() + " action : " + action);
+        //System.out.println(actor.getName() + " action : " + action);
 
         // アクションタイプに応じた処理
         switch (action) {
@@ -166,7 +166,7 @@ public class CombatManager {
      */
     private void executeAttack(ICombatant actor, List<ICombatant> targets) {
         if (targets == null || targets.isEmpty()) {
-            System.out.println("you dont select target");
+            //System.out.println("you dont select target");
             return;
         }
 
@@ -176,10 +176,10 @@ public class CombatManager {
         int damage = Math.max(1, actor.getAttackPower() - target.getDefense());
 
         target.takeDamage(damage);
-        System.out.println(target.getName() + ":" + damage + " dameges");
+        //System.out.println(target.getName() + ":" + damage + " dameges");
 
         if (!target.isAlive()) {
-            System.out.println(target.getName() + " is dead");
+            //System.out.println(target.getName() + " is dead");
         }
     }
 
@@ -188,7 +188,7 @@ public class CombatManager {
      * @param actor 防御者
      */
     private void executeDefend(ICombatant actor) {
-        System.out.println(actor.getName() + " is blocked");
+        //System.out.println(actor.getName() + " is blocked");
         // TODO: 防御状態の実装
     }
 
@@ -198,7 +198,7 @@ public class CombatManager {
      * @param targets 対象リスト
      */
     private void executeSkill(ICombatant actor, List<ICombatant> targets) {
-        System.out.println("skill system dont implement");
+        //System.out.println("skill system dont implement");
         // TODO: スキルシステムの実装
     }
 
@@ -208,7 +208,7 @@ public class CombatManager {
      * @param targets 対象リスト
      */
     private void executeItem(ICombatant actor, List<ICombatant> targets) {
-        System.out.println("item dont implement");
+        //System.out.println("item dont implement");
         // TODO: アイテムシステムの実装
     }
 
@@ -218,7 +218,7 @@ public class CombatManager {
     private void executeFlee() {
         // TODO: 逃走判定の実装(成功率など)
         battleState = BattleState.FLED;
-        System.out.println("success to escape!");
+        //System.out.println("success to escape!");
     }
 
     /**
@@ -241,7 +241,7 @@ public class CombatManager {
         boolean partyDefeated = party.stream().noneMatch(ICombatant::isAlive);
         if (partyDefeated) {
             battleState = BattleState.DEFEAT;
-            System.out.println("\n===== lose... =====");
+            //System.out.println("\n===== lose... =====");
             return true;
         }
 
@@ -249,7 +249,7 @@ public class CombatManager {
         boolean enemiesDefeated = enemies.stream().noneMatch(ICombatant::isAlive);
         if (enemiesDefeated) {
             battleState = BattleState.VICTORY;
-            System.out.println("\n===== win! =====");
+            //System.out.println("\n===== win! =====");
             return true;
         }
 

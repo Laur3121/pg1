@@ -36,9 +36,9 @@ public class TurnOrder {
         turnQueue.clear();
         turnQueue.addAll(sorted);
 
-        System.out.println("=== turn ===");
+        //System.out.println("=== turn ===");
         for (ICombatant c : sorted) {
-            System.out.println(c.getName() + " (quick: " + c.getSpeed() + ")");
+            //System.out.println(c.getName() + " (quick: " + c.getSpeed() + ")");
         }
     }
 
