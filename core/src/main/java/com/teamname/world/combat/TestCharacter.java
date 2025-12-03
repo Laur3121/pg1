@@ -56,7 +56,7 @@ public class TestCharacter implements ICombatant {
         if (currentHP < 0) {
             currentHP = 0;
         }
-        System.out.println(name + " HP: " + currentHP + "/" + maxHP);
+        //System.out.println(name + " HP: " + currentHP + "/" + maxHP);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class TestCharacter implements ICombatant {
         if (currentHP > maxHP) {
             currentHP = maxHP;
         }
-        System.out.println(name + " HP: " + currentHP + "/" + maxHP);
+        //System.out.println(name + " HP: " + currentHP + "/" + maxHP);
     }
 
     @Override

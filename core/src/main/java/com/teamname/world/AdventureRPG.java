@@ -2,6 +2,8 @@ package com.teamname.world;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.teamname.world.combat.VisualCombatScreen;
 import com.teamname.world.combat.CombatScreen;
 
 public class AdventureRPG extends Game {
