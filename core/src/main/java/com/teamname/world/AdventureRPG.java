@@ -79,3 +79,4 @@ public class AdventureRPG extends Game {
         return menuTab;
     }
 }
+
