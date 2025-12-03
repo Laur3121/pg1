@@ -117,6 +117,11 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN))  dy -= CAMERA_SPEED * delta;
         if (Gdx.input.isKeyPressed(Input.Keys.UP))    dy += CAMERA_SPEED * delta;
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.B)) { // Bキーで戦闘へ
+            game.setScreen(game.combatScreen);
+            game.battleflag = 1;
+        }   // いずれ絶対に消す！！！！！！！！！！！！！１デバッグ用戦闘システム
+
         worldCamera.position.x += dx;
         worldCamera.position.y += dy;
 

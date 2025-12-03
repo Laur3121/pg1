@@ -2,9 +2,8 @@ package com.teamname.world;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
+
 import com.teamname.world.combat.VisualCombatScreen;
-import com.teamname.world.combat.CombatScreen;
 
 public class AdventureRPG extends Game {
 
@@ -14,13 +13,13 @@ public class AdventureRPG extends Game {
     private DataLoader dataLoader;
     private Inventory inventory;
 
-    // ★復活: メニュータブ（画面に重ねて表示する部品）
+    // メニュータブ（画面に重ねて表示する部品）
     private MenuTab menuTab;
 
-    // 戦闘画面
-    public CombatScreen combatScreen;
+    // 戦闘画面（VisualCombatScreen を使用）
+    public VisualCombatScreen combatScreen;
 
-    // フラグ管理（戦闘中かどうかなど。0:通常, 1:戦闘）
+    // フラグ管理（0: 通常, 1: 戦闘）
     public int battleflag = 0;
 
     @Override
@@ -38,19 +37,19 @@ public class AdventureRPG extends Game {
         // 2. インベントリの初期化 (GameInitializerを使ってテストデータを投入)
         this.inventory = GameInitializer.createInitialInventory(dataLoader);
 
-        // 3. ★復活: メニュータブの初期化
+        // 3. メニュータブの初期化
         menuTab = new MenuTab(this);
 
-        // 4. 戦闘画面の初期化
-        combatScreen = new CombatScreen();
+        // 4. 戦闘画面の初期化（VisualCombatScreen）
+        combatScreen = new VisualCombatScreen();
 
-        // 5. 最初の画面へ移動
+        // 5. 最初の画面へ移動（タイトル画面）
         setScreen(new TitleScreen(this));
     }
 
     @Override
     public void render() {
-        // 各Screenのrenderを呼び出す
+        // 各 Screen の render を呼び出す
         super.render();
     }
 
@@ -58,7 +57,7 @@ public class AdventureRPG extends Game {
     public void dispose() {
         super.dispose();
         if (batch != null) batch.dispose();
-        if (menuTab != null) menuTab.dispose(); // ★追加
+        if (menuTab != null) menuTab.dispose();
         if (combatScreen != null) combatScreen.dispose();
     }
 
@@ -76,7 +75,7 @@ public class AdventureRPG extends Game {
         return dataLoader;
     }
 
-    public MenuTab getMenuTab() { // ★追加
+    public MenuTab getMenuTab() {
         return menuTab;
     }
 }
