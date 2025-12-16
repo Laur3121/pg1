@@ -1,9 +1,8 @@
-package com.teamname.world;
+package com.teamname.world.system;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Array; // libGDX独自のリスト
 
 import java.util.ArrayList; // Java標準のリスト
 

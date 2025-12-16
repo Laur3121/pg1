@@ -1,4 +1,4 @@
-package com.teamname.world;
+package com.teamname.world.system;
 
 /**
  * プレイヤーが実際に所持するアイテムを表すクラス。
