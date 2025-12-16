@@ -81,6 +81,19 @@ public class MenuTab {
         });
         window.getTitleTable().add(closeBtn).height(20);
 
+        // セーブボタン
+        TextButton saveBtn = new TextButton("SAVE", skin);
+        saveBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // SaveManagerを呼ぶ
+                com.teamname.world.system.SaveManager.saveGame(game);
+                System.out.println("ゲームをセーブしました！");
+            }
+        });
+        // タイトルバーの右側に追加する例
+        window.getTitleTable().add(saveBtn).height(20).padLeft(10);
+
         // ▼ 追加: ステータス表示エリア
         Table statusTable = new Table();
         // GameStateから最新の情報を取得
