@@ -40,19 +40,31 @@ public class AdventureRPG extends Game {
             e.printStackTrace();
         }
 
-        // 2. ゲーム状態（HPなど）の初期化
-        gameState = new GameState();
+        // 2. まずは空っぽの状態で初期化
+        gameState = new GameState(); // HP:50, Gold:100 (デフォルト)
+        inventory = new Inventory(); // 中身なし
 
-        // 3. インベントリの初期化 (GameInitializerを使ってテストデータを投入)
-        this.inventory = GameInitializer.createInitialInventory(dataLoader);
+        // 3. セーブデータがあるかチェックして分岐
+        if (com.badlogic.gdx.Gdx.files.local("save.json").exists()) {
+            // --- 続きから ---
+            System.out.println("セーブデータを発見。ロードします...");
+            // SaveManagerを使って、GameState(HPなど) と Inventory(アイテム) を一気にロード
+            com.teamname.world.system.SaveManager.loadGame(this);
+
+        } else {
+            // --- はじめから ---
+            System.out.println("セーブデータなし。ニューゲームを開始します。");
+            // GameInitializerを使って初期アイテムを配る
+            GameInitializer.setupNewGameInventory(inventory, dataLoader);
+        }
 
         // 4. メニュータブの初期化
         menuTab = new MenuTab(this);
 
-        // 5. 戦闘画面の初期化（VisualCombatScreen）
+        // 5. 戦闘画面の初期化
         combatScreen = new VisualCombatScreen();
 
-        // 6. 最初の画面へ移動（タイトル画面）
+        // 6. タイトル画面へ
         setScreen(new TitleScreen(this));
     }
 

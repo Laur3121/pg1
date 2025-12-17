@@ -149,9 +149,8 @@ public class MenuTab {
             System.out.println(item.data.name + " を使った！");
 
             // GameStateのHPを回復させる
-            // 本来はアイテムごとに回復量を変えたいが、今は仮で30回復
-            // ヒント: item.data.value を回復量として使ってもいいですね
-            game.getGameState().heal(30);
+            // item.data.value を回復量として使ってもいいですね
+            game.getGameState().heal(item.data.value);
 
             // アイテムを1つ減らす
             item.quantity--;
