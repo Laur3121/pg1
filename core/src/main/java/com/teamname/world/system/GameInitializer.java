@@ -1,7 +1,11 @@
 package com.teamname.world.system;
 
-public class GameInitializer {
+import com.badlogic.gdx.Gdx;
+import com.teamname.world.AdventureRPG;
+import com.teamname.world.TitleScreen;
+import com.teamname.world.combat.VisualCombatScreen;
 
+public class GameInitializer {
     /**
      * ニューゲーム時（セーブデータがない時）に、初期アイテムをインベントリに追加します。
      * @param inventory 空のインベントリ
@@ -28,5 +32,45 @@ public class GameInitializer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void initialize(AdventureRPG game) {
+        // 1. データの読み込み
+        DataLoader dataLoader = new DataLoader();
+        try {
+            dataLoader.loadAllData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        game.setDataLoader(dataLoader);
+
+        // 2. まずは空っぽの状態で初期化
+        Inventory inventory = new Inventory(); // 中身なし
+        game.setInventory(inventory);
+
+        game.setGameState(new GameState()); // HP:50, Gold:100 (デフォルト)
+
+        // 3. セーブデータがあるかチェックして分岐
+        if (Gdx.files.local("save.json").exists()) {
+            // --- 続きから ---
+            System.out.println("セーブデータを発見。ロードします...");
+            // SaveManagerを使って、GameState(HPなど) と Inventory(アイテム) を一気にロード
+            SaveManager.loadGame(game);
+
+        } else {
+            // --- はじめから ---
+            System.out.println("セーブデータなし。ニューゲームを開始します。");
+            // 自分自身（GameInitializer）のメソッドを呼び出して初期アイテムを配る
+            setupNewGameInventory(game.getInventory(), game.getDataLoader());
+        }
+
+        // 4. メニュータブの初期化
+        game.setMenuTab(new MenuTab(game));
+
+        // 5. 戦闘画面の初期化
+        game.combatScreen = new VisualCombatScreen();
+
+        // 6. タイトル画面へ
+        game.setScreen(new TitleScreen(game));
     }
 }
