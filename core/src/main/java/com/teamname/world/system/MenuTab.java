@@ -108,7 +108,7 @@ public class MenuTab {
                 toggle();
             }
         });
-        window.getTitleTable().add(closeBtn).height(20);
+        window.getTitleTable().add(closeBtn).size(30, 30).padRight(10);;
 
         // セーブボタン
         TextButton saveBtn = new TextButton("SAVE", skin);
