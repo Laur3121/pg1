@@ -2,6 +2,9 @@ package com.teamname.world.system;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color; // 追加
+import com.badlogic.gdx.graphics.Pixmap; // 追加
+import com.badlogic.gdx.graphics.Texture; // 追加
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -33,25 +36,50 @@ public class MenuTab {
         stage = new Stage(new ScreenViewport());
         skin = new Skin();
 
-        try {
-            TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("skin/uiskin.atlas"));
-            skin.addRegions(atlas);
-
-            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("skin/font.ttf"));
-            FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-            parameter.size = 24;
-            parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん"
-                + "がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽッャュョ一二三四五六七八九十百千万薬草毒消し檜の棒、。！？";
-            BitmapFont font = generator.generateFont(parameter);
-            generator.dispose();
-            skin.add("default-font", font);
-            skin.load(Gdx.files.internal("skin/uiskin.json"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            // エラー時はデフォルトスキンで続行
-            skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
-        }
+        // ▼▼▼ 追加：ここで最低限のデザイン（スタイル）を作って登録します ▼▼▼
+        createBasicSkin();
     }
+
+    // ▼▼▼ 新規追加メソッド：プログラムで簡易デザインを作成 ▼▼▼
+    private void createBasicSkin() {
+        // 1. 1x1ピクセルの白い画像を作る（これを引き伸ばしてボタンや背景にする）
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose(); // メモリ解放
+
+        // Skinに "white" という名前でこの画像を登録
+        skin.add("white", texture);
+
+        // 2. デフォルトのフォントを登録 (※注意: 日本語は表示できず、□になります。まずは英語のみ)
+        BitmapFont font = new BitmapFont();
+        skin.add("default", font);
+
+        // 3. ラベルのスタイル設定
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle.font = font;
+        labelStyle.fontColor = Color.WHITE;
+        skin.add("default", labelStyle);
+
+        // 4. テキストボタンのスタイル設定
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.font = font;
+        textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY);   // 通常時: 暗いグレー
+        textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY); // 押下時
+        textButtonStyle.over = skin.newDrawable("white", Color.GRAY);      // ホバー時: 少し明るいグレー
+        textButtonStyle.fontColor = Color.WHITE;
+        skin.add("default", textButtonStyle);
+
+        // 5. ウィンドウのスタイル設定（これが無いとエラーになります）
+        Window.WindowStyle windowStyle = new Window.WindowStyle();
+        windowStyle.titleFont = font;
+        windowStyle.titleFontColor = Color.WHITE;
+        // ウィンドウ背景：少し透明な黒
+        windowStyle.background = skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.9f);
+        skin.add("default", windowStyle);
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
 
     public void toggle() {
         isVisible = !isVisible;
@@ -65,6 +93,7 @@ public class MenuTab {
         }
     }
 
+    // ... (以下の rebuildMenu などは変更なしでOK) ...
     private void rebuildMenu() {
         stage.clear();
         Window window = new Window("Menu", skin);
@@ -117,6 +146,7 @@ public class MenuTab {
         if (inventory != null && !inventory.getItems().isEmpty()) {
             for (final Item item : new java.util.ArrayList<>(inventory.getItems())) {
 
+                // ※注意: item.data.name が日本語だと文字化けして表示されません。今は英語推奨です。
                 TextButton itemButton = new TextButton(item.data.name, skin);
                 itemButton.addListener(new ClickListener() {
                     @Override
