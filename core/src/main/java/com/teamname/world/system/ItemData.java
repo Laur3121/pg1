@@ -1,4 +1,4 @@
-package com.teamname.world;
+package com.teamname.world.system;
 
 // このクラスは、JSONのデータを読み込むためだけの「入れ物」です
 public class ItemData {
