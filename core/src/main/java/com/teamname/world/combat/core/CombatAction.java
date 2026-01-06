@@ -1,4 +1,4 @@
-package com.teamname.world.combat;
+package com.teamname.world.combat.core;
 
 /**
  * 戦闘で実行可能なアクション

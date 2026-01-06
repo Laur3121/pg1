@@ -1,4 +1,4 @@
-package com.teamname.world.combat;
+package com.teamname.world.combat.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -11,6 +11,12 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
+
+import com.teamname.world.combat.core.CombatManager;
+import com.teamname.world.combat.core.ICombatant;
+import com.teamname.world.combat.core.TurnOrder;
+import com.teamname.world.combat.core.CombatAction;
+import com.teamname.world.combat.TestCharacter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +91,7 @@ public class VisualCombatScreen implements Screen {
 
     private void loadAssets() {
         // 味方 (Warrior)
-        loadTextureSafe("warrior_idle", "evil Mage Pack/warriar/idle/1.png");
+        loadTextureSafe("warrior_idle", "face/fuji.png");
         loadTextureSafe("warrior_attack1", "evil Mage Pack/warriar/tile000.png");
         loadTextureSafe("warrior_attack2", "evil Mage Pack/warriar/tile001.png");
         loadTextureSafe("warrior_attack3", "evil Mage Pack/warriar/tile002.png");
@@ -93,7 +99,7 @@ public class VisualCombatScreen implements Screen {
         loadTextureSafe("warrior_walk2", "evil Mage Pack/warriar/runandjump/2.png");
 
         // 敵 (Evil Mage)
-        loadTextureSafe("evilmage_idle", "evil Mage Pack/evilmage/idle/tile016.png");
+        loadTextureSafe("evilmage_idle", "face/tanabe.png");
         loadTextureSafe("evilmage_attack1", "evil Mage Pack/evilmage/attack/tile024.png");
         loadTextureSafe("evilmage_attack2", "evil Mage Pack/evilmage/attack/tile025.png");
         loadTextureSafe("evilmage_attack3", "evil Mage Pack/evilmage/attack/tile026.png");
@@ -101,7 +107,7 @@ public class VisualCombatScreen implements Screen {
         loadTextureSafe("evilmage_walk2", "evil Mage Pack/evilmage/walk/tile021.png");
 
         // 敵 (Archer)
-        loadTextureSafe("archer_idle", "evil Mage Pack/archer/tile028.png");
+        loadTextureSafe("archer_idle", "face/iwasaki.png");
         loadTextureSafe("archer_attack1", "evil Mage Pack/archer/tile030.png");
         loadTextureSafe("archer_attack2", "evil Mage Pack/archer/tile031.png");
         loadTextureSafe("archer_attack3", "evil Mage Pack/archer/tile032.png");

@@ -1,4 +1,4 @@
-package com.teamname.world.combat;
+package com.teamname.world.combat.core;
 
 /**
  * 戦闘参加者のインターフェース

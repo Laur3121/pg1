@@ -1,5 +1,7 @@
 package com.teamname.world.combat;
 
+import com.teamname.world.combat.core.ICombatant;
+
 /**
  * テスト用のキャラクタークラス
  * ICombatantインターフェースの簡易実装

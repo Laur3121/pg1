@@ -1,5 +1,10 @@
 package com.teamname.world.combat;
 
+import com.teamname.world.combat.core.CombatManager;
+import com.teamname.world.combat.core.ICombatant;
+import com.teamname.world.combat.core.TurnOrder;
+import com.teamname.world.combat.core.CombatAction;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

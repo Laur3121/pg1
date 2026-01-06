@@ -1,4 +1,4 @@
-package com.teamname.world.combat;
+package com.teamname.world.combat.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;

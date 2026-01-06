@@ -3,7 +3,17 @@ package com.teamname.world;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+<<<<<<< Updated upstream
 import com.teamname.world.combat.VisualCombatScreen;
+=======
+import com.teamname.world.system.DataLoader;
+import com.teamname.world.system.GameInitializer; // 既存のファイルをインポート
+import com.teamname.world.system.Inventory;
+import com.teamname.world.system.MenuTab;
+import com.teamname.world.system.GameState;
+>>>>>>> Stashed changes
+
+import com.teamname.world.combat.ui.VisualCombatScreen;
 
 public class AdventureRPG extends Game {
 
