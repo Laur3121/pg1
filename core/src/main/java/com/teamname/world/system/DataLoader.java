@@ -4,30 +4,39 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Json;
 
-import java.util.ArrayList; // Java標準のリスト
+import java.util.ArrayList;
 
 public class DataLoader {
 
     // 読み込んだ全アイテムデータを保持するリスト
     public ArrayList<ItemData> allItems;
 
-    // ゲーム起動時に一度だけ呼ぶことを想定したメソッド
     public void loadAllData() {
         Json json = new Json();
 
-        // 1. assets/items.json ファイルを見つける
+        // 1. assets/data/items.json ファイルを見つける
         FileHandle itemFile = Gdx.files.internal("data/items.json");
 
-        // 2. ファイルを読み込み、ItemDataの「リスト」として解釈する
-        //    (Array.class は libGDX 独自のリスト型, ItemData.class は中身の型)
+        // 2. ファイルを読み込み
         this.allItems = json.fromJson(ArrayList.class, ItemData.class, itemFile);
 
-        // --- デバッグ（確認）用 ---
-        // ちゃんと読み込めたかコンソールに出力してみる
         System.out.println("--- アイテムデータの読み込み完了 ---");
-        for (ItemData item : allItems) {
-            System.out.println("ID: " + item.id + ", 名前: " + item.name);
+        // デバッグ出力は少し省略しても良いでしょう
+    }
+
+    /**
+     * 指定されたIDを持つItemDataを検索して返します。
+     * セーブデータのロード時に使用します。
+     */
+    public ItemData getItemDataById(int id) {
+        if (allItems == null) return null;
+
+        for (ItemData data : allItems) {
+            if (data.id == id) {
+                return data;
+            }
         }
-        System.out.println("---------------------------------");
+        System.out.println("警告: ID " + id + " のアイテムデータが見つかりませんでした。");
+        return null;
     }
 }
