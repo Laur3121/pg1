@@ -52,8 +52,9 @@ public class MenuTab {
         // Skinに "white" という名前でこの画像を登録
         skin.add("white", texture);
 
-        // 2. デフォルトのフォントを登録 (※注意: 日本語は表示できず、□になります。まずは英語のみ)
-        BitmapFont font = new BitmapFont();
+        // 2. デフォルトのフォントを登録
+        // BitmapFont font = new BitmapFont(); // これだと日本語が出ない
+        BitmapFont font = FontSystem.createJapaneseFont(24);
         skin.add("default", font);
 
         // 3. ラベルのスタイル設定
@@ -65,9 +66,9 @@ public class MenuTab {
         // 4. テキストボタンのスタイル設定
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = font;
-        textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY);   // 通常時: 暗いグレー
+        textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY); // 通常時: 暗いグレー
         textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY); // 押下時
-        textButtonStyle.over = skin.newDrawable("white", Color.GRAY);      // ホバー時: 少し明るいグレー
+        textButtonStyle.over = skin.newDrawable("white", Color.GRAY); // ホバー時: 少し明るいグレー
         textButtonStyle.fontColor = Color.WHITE;
         skin.add("default", textButtonStyle);
 
@@ -108,7 +109,8 @@ public class MenuTab {
                 toggle();
             }
         });
-        window.getTitleTable().add(closeBtn).size(30, 30).padRight(10);;
+        window.getTitleTable().add(closeBtn).size(30, 30).padRight(10);
+        ;
 
         // セーブボタン
         TextButton saveBtn = new TextButton("SAVE", skin);
@@ -136,7 +138,8 @@ public class MenuTab {
 
         // ウィンドウの上部に追加
         window.add(statusTable).center().row();
-        window.add(new com.badlogic.gdx.scenes.scene2d.ui.Image(skin.newDrawable("white", 0.5f, 0.5f, 0.5f, 1))).height(2).fillX().pad(5).row(); // 区切り線
+        window.add(new com.badlogic.gdx.scenes.scene2d.ui.Image(skin.newDrawable("white", 0.5f, 0.5f, 0.5f, 1)))
+                .height(2).fillX().pad(5).row(); // 区切り線
 
         // --- ここから下はアイテムリスト（前回と同じですが、少し整理） ---
         Table contentTable = new Table();

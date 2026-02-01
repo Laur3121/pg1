@@ -7,7 +7,8 @@ import com.teamname.world.combat.VisualCombatScreen;
 import com.teamname.world.system.DataLoader;
 import com.teamname.world.system.GameInitializer; // 既存のファイルをインポート
 import com.teamname.world.system.Inventory;
-import com.teamname.world.system.MenuTab;
+import com.teamname.world.system.UIManager;
+import com.teamname.world.system.AudioManager;
 import com.teamname.world.system.GameState;
 
 public class AdventureRPG extends Game {
@@ -19,8 +20,8 @@ public class AdventureRPG extends Game {
     private Inventory inventory;
     private GameState gameState;
 
-    // メニュータブ（画面に重ねて表示する部品）
-    private MenuTab menuTab;
+    // UIマネージャー
+    private UIManager uiManager;
 
     // 戦闘画面（VisualCombatScreen を使用）
     public VisualCombatScreen combatScreen;
@@ -42,9 +43,12 @@ public class AdventureRPG extends Game {
     @Override
     public void dispose() {
         super.dispose();
-        if (batch != null) batch.dispose();
-        if (menuTab != null) menuTab.dispose();
-        if (combatScreen != null) combatScreen.dispose();
+        if (batch != null)
+            batch.dispose();
+        if (uiManager != null)
+            uiManager.dispose();
+        if (combatScreen != null)
+            combatScreen.dispose();
     }
 
     // --- ▼ 追加したセッター（GameInitializerから使うために必要） ---
@@ -61,8 +65,8 @@ public class AdventureRPG extends Game {
         this.gameState = gameState;
     }
 
-    public void setMenuTab(MenuTab menuTab) {
-        this.menuTab = menuTab;
+    public void setUIManager(UIManager uiManager) {
+        this.uiManager = uiManager;
     }
 
     // --- ゲッター（既存のまま） ---
@@ -83,8 +87,19 @@ public class AdventureRPG extends Game {
         return dataLoader;
     }
 
-    public MenuTab getMenuTab() {
-        return menuTab;
+    public UIManager getUIManager() {
+        return uiManager;
+    }
+
+    // --- AudioManager ---
+    private AudioManager audioManager;
+
+    public void setAudioManager(AudioManager audioManager) {
+        this.audioManager = audioManager;
+    }
+
+    public AudioManager getAudioManager() {
+        return audioManager;
     }
 }
 

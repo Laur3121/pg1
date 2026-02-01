@@ -4,11 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.teamname.world.AdventureRPG;
 import com.teamname.world.TitleScreen;
 import com.teamname.world.combat.VisualCombatScreen;
+import com.teamname.world.system.UIManager;
 
 public class GameInitializer {
     /**
      * ニューゲーム時（セーブデータがない時）に、初期アイテムをインベントリに追加します。
-     * @param inventory 空のインベントリ
+     * 
+     * @param inventory  空のインベントリ
      * @param dataLoader アイテムデータの参照元
      */
     public static void setupNewGameInventory(Inventory inventory, DataLoader dataLoader) {
@@ -64,13 +66,16 @@ public class GameInitializer {
             setupNewGameInventory(game.getInventory(), game.getDataLoader());
         }
 
-        // 4. メニュータブの初期化
-        game.setMenuTab(new MenuTab(game));
+        // 4. UIマネージャーの初期化
+        game.setUIManager(new UIManager(game));
 
         // 5. 戦闘画面の初期化
         game.combatScreen = new VisualCombatScreen();
 
-        // 6. タイトル画面へ
+        // 6. オーディオマネージャーの初期化
+        game.setAudioManager(new AudioManager());
+
+        // 7. タイトル画面へ
         game.setScreen(new TitleScreen(game));
     }
 }
