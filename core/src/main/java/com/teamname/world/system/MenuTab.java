@@ -109,7 +109,7 @@ public class MenuTab {
                 toggle();
             }
         });
-        window.getTitleTable().add(closeBtn).size(30, 30).padRight(10);
+        window.getTitleTable().add(closeBtn).size(60, 60).padRight(10);
         ;
 
         // セーブボタン

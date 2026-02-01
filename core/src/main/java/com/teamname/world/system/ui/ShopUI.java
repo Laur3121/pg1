@@ -90,7 +90,7 @@ public class ShopUI {
                 hide();
             }
         });
-        window.getTitleTable().add(closeBtn).size(60, 30).padRight(10);
+        window.getTitleTable().add(closeBtn).size(60, 60).padRight(10);
 
         // 所持金表示
         Label goldLabel = new Label("所持金: " + game.getGameState().gold + " G", skin);
