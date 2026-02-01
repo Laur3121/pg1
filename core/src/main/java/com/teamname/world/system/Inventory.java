@@ -19,7 +19,8 @@ public class Inventory {
 
     /**
      * インベントリにアイテムを追加します。
-     * @param data 追加するアイテムの ItemData
+     * 
+     * @param data     追加するアイテムの ItemData
      * @param quantity 追加する個数
      */
     public void addItem(ItemData data, int quantity) {
@@ -28,10 +29,19 @@ public class Inventory {
         }
 
         // TODO: 本来は、すでに同じアイテム(data.idが同じ)を持っているか探し、
-        //       持っていれば quantity を増やす（重ねる）処理を入れます。
-        //       今は簡単にするため、常に新しいItemとしてリストに追加します。
+        // 持っていれば quantity を増やす（重ねる）処理を入れます。
+        // 今は簡単にするため、常に新しいItemとしてリストに追加します。
 
-        Item newItem = new Item(data, quantity);
+        // アイテム種別によってクラスを使い分ける（簡易的なFactoryパターン）
+        Item newItem;
+        if ((data.type != null) && (data.type.equalsIgnoreCase("WEAPON") || data.type.equalsIgnoreCase("ARMOR"))) {
+            // 装備品として作成（スロットは仮でWEAPON固定にしていますが、本来はデータから判定します）
+            Equipment.Slot slot = Equipment.Slot.WEAPON;
+            newItem = new Equipment(data, quantity, slot);
+        } else {
+            newItem = new Item(data, quantity);
+        }
+
         items.add(newItem);
 
         System.out.println("インベントリ: " + newItem.data.name + " を " + quantity + "個追加しました。");
