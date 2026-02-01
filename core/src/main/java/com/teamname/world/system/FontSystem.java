@@ -13,16 +13,15 @@ public class FontSystem {
         FreeTypeFontGenerator generator = null;
 
         // 1. assetsフォルダ内のフォントを探す
-        // TODO: ユーザーがフォントを追加したらここを変える
-        // FileHandle fontFile = Gdx.files.internal("fonts/myfont.ttf");
+        // システムフォントを assets/fonts/ipam.ttf にコピーしてあることを想定
+        FileHandle fontFile = Gdx.files.internal("fonts/ipam.ttf");
 
-        // 2. Windowsのシステムフォントを使用する (開発用)
-        // ※Android等にビルドする際はassetsにフォントファイルを含める必要があります
-        FileHandle fontFile = Gdx.files.absolute("C:/Windows/Fonts/msgothic.ttc");
-
+        // 2. なければWindowsのシステムフォントを使用する (バックアップ)
         if (!fontFile.exists()) {
-            // 別のフォントを試す
-            fontFile = Gdx.files.absolute("C:/Windows/Fonts/meiryo.ttc");
+            fontFile = Gdx.files.absolute("C:/Windows/Fonts/msgothic.ttc");
+            if (!fontFile.exists()) {
+                fontFile = Gdx.files.absolute("C:/Windows/Fonts/meiryo.ttc");
+            }
         }
 
         if (fontFile.exists()) {
@@ -46,7 +45,7 @@ public class FontSystem {
                 "がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ" +
                 "ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ" +
                 "っゃゅょッャュョー、。！？" +
-                "漢字剣盾鎧兜薬草火水風土光闇魔王城村人勇者旅冒険経験値金力守早賢" + // 必要な漢字を列挙
+                "漢字剣盾鎧兜薬草火水風土光闇魔王城村人勇者旅冒険経験値金力守早賢購入売" + // 必要な漢字を列挙
                 "HPMPLvExG";
 
         // すべての漢字を含めると重くなるので、使用する文字だけ追加するのが軽量です
