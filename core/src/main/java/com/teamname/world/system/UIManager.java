@@ -70,8 +70,18 @@ public class UIManager {
      */
     public void showBattleUI(int enemyId) {
         // TODO: 敵IDに応じたセットアップをここで行う
+        // 例: game.combatScreen.setupEncounter(enemyId);
+        System.out.println("Battle Started with Enemy ID: " + enemyId);
         game.battleflag = 1;
         game.setScreen(game.combatScreen);
+    }
+
+    /**
+     * 戦闘ログなどを表示する（仮）
+     */
+    public void addBattleLog(String message) {
+        // 必要ならBattleScreenへ転送、またはオーバーレイ表示
+        System.out.println("[BATTLE LOG] " + message);
     }
 
     // --- 更新・描画 ---

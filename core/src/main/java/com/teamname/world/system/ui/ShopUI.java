@@ -93,7 +93,7 @@ public class ShopUI {
         window.getTitleTable().add(closeBtn).size(60, 60).padRight(10);
 
         // 所持金表示
-        Label goldLabel = new Label("所持金: " + game.getGameState().gold + " G", skin);
+        Label goldLabel = new Label("所持金: " + game.getGameState().gold + " 円", skin);
         window.add(goldLabel).pad(10).row();
 
         // 商品リスト
@@ -105,7 +105,7 @@ public class ShopUI {
             ItemData item = shop.getShopItems().get(i);
 
             Label nameLabel = new Label(item.name, skin);
-            Label priceLabel = new Label(item.value + " G", skin);
+            Label priceLabel = new Label(item.value + " 円", skin);
             TextButton buyBtn = new TextButton("購入", skin);
 
             buyBtn.addListener(new ClickListener() {

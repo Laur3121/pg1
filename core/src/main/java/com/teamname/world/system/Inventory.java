@@ -65,8 +65,71 @@ public class Inventory {
     public ArrayList<Item> getItems() {
         return items;
     }
-    // 将来的には以下のメソッドも必要になります
-    // public void removeItem(int itemId, int quantity) { ... }
-    // public boolean hasItem(int itemId) { ... }
-    // public Item getItem(int itemId) { ... }
+
+    /**
+     * 指定したアイテムをインベントリから削除します。
+     * 
+     * @param data     削除するアイテムの ItemData
+     * @param quantity 削除する個数
+     * @return 実際に削除できた個数（所持数より多く指定された場合は所持数分だけ削除）
+     */
+    public int removeItem(ItemData data, int quantity) {
+        if (quantity <= 0)
+            return 0;
+
+        Item target = null;
+        for (Item item : items) {
+            if (item.data.id == data.id) {
+                target = item;
+                break;
+            }
+        }
+
+        if (target != null) {
+            if (target.quantity > quantity) {
+                target.quantity -= quantity;
+                return quantity;
+            } else {
+                int removed = target.quantity;
+                items.remove(target);
+                return removed;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * 指定したアイテムIDを持っているか確認します。
+     */
+    public boolean hasItem(int itemId) {
+        for (Item item : items) {
+            // アイテムIDの一致をチェック
+            // ※Itemクラスのコンストラクタで data が必須になっている前提
+            if (item.data != null && item.data.id == itemId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 指定したアイテムIDの所持数を返します。
+     */
+    public int getItemCount(int itemId) {
+        for (Item item : items) {
+            if (item.data != null && item.data.id == itemId) {
+                return item.quantity;
+            }
+        }
+        return 0;
+    }
+
+    public Item getItem(int itemId) {
+        for (Item item : items) {
+            if (item.data != null && item.data.id == itemId) {
+                return item;
+            }
+        }
+        return null;
+    }
 }

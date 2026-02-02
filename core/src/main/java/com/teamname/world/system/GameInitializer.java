@@ -53,7 +53,10 @@ public class GameInitializer {
         game.setGameState(new GameState()); // HP:50, Gold:100 (デフォルト)
 
         // 3. セーブデータがあるかチェックして分岐
-        if (Gdx.files.local("data/save.dat").exists()) {
+        // ※デバッグ中: セーブデータを読み込まず、常に初期状態（5000円など）で開始する
+        boolean isDebug = true;
+
+        if (!isDebug && Gdx.files.local("data/save.dat").exists()) {
             // --- 続きから ---
             System.out.println("セーブデータを発見。ロードします...");
             // SaveManagerを使って、GameState(HPなど) と Inventory(アイテム) を一気にロード
