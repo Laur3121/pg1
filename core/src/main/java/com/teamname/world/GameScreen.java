@@ -75,7 +75,7 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         // マップ読み込み
-        map = new TmxMapLoader().load("maps/map2.tmx");
+        map = new TmxMapLoader().load("maps/map1.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1f);
 
         MapProperties props = map.getProperties();
@@ -348,8 +348,3 @@ public class GameScreen implements Screen {
             stage.dispose();
     }
 }
-
-
-
-
-
