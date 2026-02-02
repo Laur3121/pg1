@@ -1,11 +1,11 @@
-package com.teamname.world.system;
+package com.teamname.world.system.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -13,17 +13,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.teamname.world.AdventureRPG;
+import com.teamname.world.system.FontSystem;
+import com.teamname.world.system.SaveManager;
 
-public class MenuTab {
+public class SaveUI {
     private AdventureRPG game;
     private Stage stage;
     private Skin skin;
     private boolean isVisible = false;
 
-    public MenuTab(AdventureRPG game) {
+    public SaveUI(AdventureRPG game) {
         this.game = game;
         createUI();
     }
@@ -53,7 +54,7 @@ public class MenuTab {
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = font;
         textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY);
-        textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY);
+        textButtonStyle.down = skin.newDrawable("white", Color.BLUE);
         textButtonStyle.over = skin.newDrawable("white", Color.GRAY);
         textButtonStyle.fontColor = Color.WHITE;
         skin.add("default", textButtonStyle);
@@ -65,87 +66,55 @@ public class MenuTab {
         skin.add("default", windowStyle);
     }
 
-    public void toggle() {
-        isVisible = !isVisible;
-        if (isVisible) {
-            rebuildMenu();
-            Gdx.input.setInputProcessor(stage);
-        } else {
-            Gdx.input.setInputProcessor(null);
-        }
-    }
-
-    private void rebuildMenu() {
+    private void rebuildWindow() {
         stage.clear();
-        Window window = new Window("Main Menu (ESC)", skin);
-        window.setSize(300, 400); // サイズ調整
-        window.setPosition((Gdx.graphics.getWidth() - 300) / 2f, (Gdx.graphics.getHeight() - 400) / 2f);
+        Window window = new Window("Save System", skin);
+        window.setSize(400, 250);
+        window.setPosition((Gdx.graphics.getWidth() - 400) / 2f, (Gdx.graphics.getHeight() - 250) / 2f);
 
-        // 閉じるボタン
-        TextButton closeBtn = new TextButton("X", skin);
-        closeBtn.addListener(new ClickListener() {
+        Label msg = new Label("現在の進行状況をセーブしますか？", skin);
+        msg.setWrap(true);
+        window.add(msg).width(350).pad(20).row();
+
+        Table btnTable = new Table();
+
+        TextButton yesBtn = new TextButton("はい (Yes)", skin);
+        yesBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                toggle();
+                SaveManager.saveGame(game);
+                System.out.println("セーブしました。");
+                hide(); // セーブしたら閉じる
             }
         });
-        // タイトルバー右
-        window.getTitleTable().add(closeBtn).size(40, 40).padRight(10);
 
-        Table table = new Table();
-
-        // 1. Bag (B)
-        TextButton bagBtn = new TextButton("バッグ (B)", skin);
-        bagBtn.addListener(new ClickListener() {
+        TextButton noBtn = new TextButton("いいえ (No)", skin);
+        noBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                toggle(); // メニュー閉じる
-                game.getUIManager().showInventory();
+                hide();
             }
         });
-        table.add(bagBtn).fillX().pad(10).row();
 
-        // 2. Status (C)
-        TextButton statusBtn = new TextButton("ステータス (C)", skin);
-        statusBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showStatus();
-            }
-        });
-        table.add(statusBtn).fillX().pad(10).row();
+        btnTable.add(yesBtn).size(150, 50).pad(10);
+        btnTable.add(noBtn).size(150, 50).pad(10);
 
-        // 3. Save (S)
-        TextButton saveBtn = new TextButton("セーブ (S)", skin);
-        saveBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showSave();
-            }
-        });
-        table.add(saveBtn).fillX().pad(10).row();
-
-        // 4. Debug (D)
-        TextButton debugBtn = new TextButton("デバッグ (D)", skin);
-        debugBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showDebug();
-            }
-        });
-        table.add(debugBtn).fillX().pad(10).row();
-
-        window.add(table).expand().top().padTop(20);
+        window.add(btnTable).row();
         stage.addActor(window);
     }
 
+    public void show() {
+        isVisible = true;
+        rebuildWindow();
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    public void hide() {
+        isVisible = false;
+        Gdx.input.setInputProcessor(null);
+    }
+
     public void updateAndRender(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            toggle();
-        }
         if (isVisible) {
             stage.act(delta);
             stage.draw();

@@ -17,40 +17,55 @@ public class UIManager {
     private AdventureRPG game;
     private MenuTab menuTab;
     private DialogUI dialogUI;
-    private ShopUI shopUI; // 追加
+    private ShopUI shopUI;
+
+    // 追加UI
+    private com.teamname.world.system.ui.InventoryUI inventoryUI;
+    private com.teamname.world.system.ui.StatusUI statusUI;
+    private com.teamname.world.system.ui.SaveUI saveUI;
+    private com.teamname.world.system.ui.DebugUI debugUI;
 
     public UIManager(AdventureRPG game) {
         this.game = game;
-        this.menuTab = new MenuTab(game); // 既存のMenuTabを利用
+        this.menuTab = new MenuTab(game); // Hub
         this.dialogUI = new DialogUI();
-        this.shopUI = new ShopUI(game); // 追加
+        this.shopUI = new ShopUI(game);
+
+        this.inventoryUI = new com.teamname.world.system.ui.InventoryUI(game);
+        this.statusUI = new com.teamname.world.system.ui.StatusUI(game);
+        this.saveUI = new com.teamname.world.system.ui.SaveUI(game);
+        this.debugUI = new com.teamname.world.system.ui.DebugUI(game);
     }
 
-    // --- メニュー関連 ---
+    // --- 各画面の表示メソッド (MenuTabから呼ばれる) ---
+    public void showInventory() {
+        if (!inventoryUI.isVisible())
+            inventoryUI.show();
+    }
+
+    public void showStatus() {
+        if (!statusUI.isVisible())
+            statusUI.show();
+    }
+
+    public void showSave() {
+        if (!saveUI.isVisible())
+            saveUI.show();
+    }
+
+    public void showDebug() {
+        if (!debugUI.isVisible())
+            debugUI.show();
+    }
+
     public void showMenu() {
-        if (!menuTab.isVisible() && !shopUI.isVisible()) {
+        if (!menuTab.isVisible())
             menuTab.toggle();
-        }
     }
 
-    public void hideMenu() {
-        if (menuTab.isVisible()) {
-            menuTab.toggle();
-        }
-    }
-
-    public MenuTab getMenuTab() {
-        return menuTab;
-    }
-
-    // --- ショップ関連 ---
     public void showShop() {
-        if (!shopUI.isVisible()) {
-            // メニューが出てたら閉じる
-            if (menuTab.isVisible())
-                menuTab.toggle();
+        if (!shopUI.isVisible())
             shopUI.show();
-        }
     }
 
     // --- 会話関連 ---
@@ -63,64 +78,100 @@ public class UIManager {
     }
 
     // --- 戦闘関連 ---
-    /**
-     * 戦闘画面へ遷移します。
-     * 
-     * @param enemyId 敵のIDなどを渡す想定
-     */
     public void showBattleUI(int enemyId) {
-        // TODO: 敵IDに応じたセットアップをここで行う
-        // 例: game.combatScreen.setupEncounter(enemyId);
+        // TODO: セットアップ
         System.out.println("Battle Started with Enemy ID: " + enemyId);
         game.battleflag = 1;
         game.setScreen(game.combatScreen);
     }
 
-    /**
-     * 戦闘ログなどを表示する（仮）
-     */
     public void addBattleLog(String message) {
-        // 必要ならBattleScreenへ転送、またはオーバーレイ表示
         System.out.println("[BATTLE LOG] " + message);
     }
 
     // --- 更新・描画 ---
     public void updateAndRender(float delta) {
-        // キー入力でショップテスト（Sキー）
-        if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
-            if (shopUI.isVisible())
-                shopUI.hide();
+        // キー入力監視
+        if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
+            inventoryUI.toggle();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.C)) {
+            if (statusUI.isVisible())
+                statusUI.hide();
             else
-                showShop();
+                statusUI.show();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
+            if (saveUI.isVisible())
+                saveUI.hide();
+            else
+                saveUI.show();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+            if (debugUI.isVisible())
+                debugUI.hide();
+            else
+                debugUI.show();
         }
 
-        // メニューの描画
-        if (menuTab != null) {
+        // 各UIの描画 (順序注意: 後に描くほうが手前)
+        if (menuTab != null)
             menuTab.updateAndRender(delta);
-        }
-        // 会話ウィンドウの描画（メニューより上に表示）
-        if (dialogUI != null) {
-            dialogUI.updateAndRender(delta);
-        }
-        // ショップ画面
-        if (shopUI != null) {
+        if (inventoryUI != null)
+            inventoryUI.updateAndRender(delta);
+        if (statusUI != null)
+            statusUI.updateAndRender(delta);
+        if (saveUI != null)
+            saveUI.updateAndRender(delta);
+        if (debugUI != null)
+            debugUI.updateAndRender(delta);
+        if (shopUI != null)
             shopUI.updateAndRender(delta);
-        }
+        if (dialogUI != null)
+            dialogUI.updateAndRender(delta);
     }
 
     public void resize(int width, int height) {
         if (menuTab != null)
             menuTab.resize(width, height);
-        if (dialogUI != null)
-            dialogUI.resize(width, height);
+        if (inventoryUI != null)
+            inventoryUI.resize(width, height);
+        if (statusUI != null)
+            statusUI.resize(width, height);
+        if (saveUI != null)
+            saveUI.resize(width, height);
+        if (debugUI != null)
+            debugUI.resize(width, height);
         if (shopUI != null)
             shopUI.resize(width, height);
+        if (dialogUI != null)
+            dialogUI.resize(width, height);
     }
 
     public void dispose() {
         if (menuTab != null)
             menuTab.dispose();
+        if (inventoryUI != null)
+            inventoryUI.dispose();
+        if (statusUI != null)
+            statusUI.dispose();
+        if (saveUI != null)
+            saveUI.dispose();
+        if (debugUI != null)
+            debugUI.dispose();
+        if (shopUI != null)
+            shopUI.dispose();
         if (dialogUI != null)
             dialogUI.dispose();
+    }
+
+    public boolean isAnyUIOpen() {
+        return (menuTab != null && menuTab.isVisible()) ||
+                (inventoryUI != null && inventoryUI.isVisible()) ||
+                (statusUI != null && statusUI.isVisible()) ||
+                (saveUI != null && saveUI.isVisible()) ||
+                (debugUI != null && debugUI.isVisible()) ||
+                (shopUI != null && shopUI.isVisible()) ||
+                (dialogUI != null && dialogUI.isVisible());
     }
 }

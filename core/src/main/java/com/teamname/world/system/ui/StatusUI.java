@@ -1,11 +1,11 @@
-package com.teamname.world.system;
+package com.teamname.world.system.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -13,17 +13,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.teamname.world.AdventureRPG;
+import com.teamname.world.system.FontSystem;
+import com.teamname.world.system.GameState;
 
-public class MenuTab {
+public class StatusUI {
     private AdventureRPG game;
     private Stage stage;
     private Skin skin;
     private boolean isVisible = false;
 
-    public MenuTab(AdventureRPG game) {
+    public StatusUI(AdventureRPG game) {
         this.game = game;
         createUI();
     }
@@ -35,6 +36,7 @@ public class MenuTab {
     }
 
     private void createBasicSkin() {
+        // 共通のスキン作成ロジック（本来は共通クラス化すべきですが、今回はコピーします）
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
         pixmap.fill();
@@ -53,7 +55,7 @@ public class MenuTab {
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = font;
         textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY);
-        textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY);
+        textButtonStyle.down = skin.newDrawable("white", Color.BLUE);
         textButtonStyle.over = skin.newDrawable("white", Color.GRAY);
         textButtonStyle.fontColor = Color.WHITE;
         skin.add("default", textButtonStyle);
@@ -65,87 +67,66 @@ public class MenuTab {
         skin.add("default", windowStyle);
     }
 
-    public void toggle() {
-        isVisible = !isVisible;
-        if (isVisible) {
-            rebuildMenu();
-            Gdx.input.setInputProcessor(stage);
-        } else {
-            Gdx.input.setInputProcessor(null);
-        }
-    }
-
-    private void rebuildMenu() {
+    private void rebuildWindow() {
         stage.clear();
-        Window window = new Window("Main Menu (ESC)", skin);
-        window.setSize(300, 400); // サイズ調整
-        window.setPosition((Gdx.graphics.getWidth() - 300) / 2f, (Gdx.graphics.getHeight() - 400) / 2f);
+        Window window = new Window("Status (C)", skin);
+        window.setSize(400, 400);
+        window.setPosition((Gdx.graphics.getWidth() - 400) / 2f, (Gdx.graphics.getHeight() - 400) / 2f);
 
-        // 閉じるボタン
         TextButton closeBtn = new TextButton("X", skin);
         closeBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                toggle();
+                hide();
             }
         });
-        // タイトルバー右
         window.getTitleTable().add(closeBtn).size(40, 40).padRight(10);
 
-        Table table = new Table();
+        Table statusTable = new Table();
+        GameState state = game.getGameState();
 
-        // 1. Bag (B)
-        TextButton bagBtn = new TextButton("バッグ (B)", skin);
-        bagBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle(); // メニュー閉じる
-                game.getUIManager().showInventory();
-            }
-        });
-        table.add(bagBtn).fillX().pad(10).row();
+        statusTable.add(new Label("Level:", skin)).left();
+        statusTable.add(new Label(String.valueOf(state.level), skin)).right().row();
 
-        // 2. Status (C)
-        TextButton statusBtn = new TextButton("ステータス (C)", skin);
-        statusBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showStatus();
-            }
-        });
-        table.add(statusBtn).fillX().pad(10).row();
+        statusTable.add(new Label("HP:", skin)).left();
+        statusTable.add(new Label(state.currentHp + " / " + state.maxHp, skin)).right().row();
 
-        // 3. Save (S)
-        TextButton saveBtn = new TextButton("セーブ (S)", skin);
-        saveBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showSave();
-            }
-        });
-        table.add(saveBtn).fillX().pad(10).row();
+        statusTable.add(new Label("MP:", skin)).left();
+        statusTable.add(new Label(state.currentMp + " / " + state.maxMp, skin)).right().row();
 
-        // 4. Debug (D)
-        TextButton debugBtn = new TextButton("デバッグ (D)", skin);
-        debugBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggle();
-                game.getUIManager().showDebug();
-            }
-        });
-        table.add(debugBtn).fillX().pad(10).row();
+        statusTable.add(new Label("STR:", skin)).left();
+        statusTable.add(new Label(String.valueOf(state.str), skin)).right().row();
 
-        window.add(table).expand().top().padTop(20);
+        statusTable.add(new Label("DEF:", skin)).left();
+        statusTable.add(new Label(String.valueOf(state.def), skin)).right().row();
+
+        statusTable.add(new Label("Gold:", skin)).left();
+        statusTable.add(new Label(state.gold + " 円", skin)).right().row();
+
+        // 総合攻撃力・防御力
+        statusTable.add(new Label("----------", skin)).colspan(2).row();
+        statusTable.add(new Label("Total ATK:", skin)).left();
+        statusTable.add(new Label(String.valueOf(state.getAttack(game.getDataLoader())), skin)).right().row();
+
+        statusTable.add(new Label("Total DEF:", skin)).left();
+        statusTable.add(new Label(String.valueOf(state.getDefense(game.getDataLoader())), skin)).right().row();
+
+        window.add(statusTable).expand().top().pad(20);
         stage.addActor(window);
     }
 
+    public void show() {
+        isVisible = true;
+        rebuildWindow();
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    public void hide() {
+        isVisible = false;
+        Gdx.input.setInputProcessor(null);
+    }
+
     public void updateAndRender(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            toggle();
-        }
         if (isVisible) {
             stage.act(delta);
             stage.draw();
