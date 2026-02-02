@@ -21,6 +21,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.teamname.world.entity.PlayerEntity;
+import com.teamname.world.entity.MonsterEntity;
+import com.teamname.world.entity.NPCEntity;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameScreen implements Screen {
 
@@ -54,6 +59,14 @@ public class GameScreen implements Screen {
 
     // ミニマップのサイズ倍率
     private static final float MINIMAP_SCALE = 0.2f;
+
+    // エンティティ
+    private PlayerEntity player;
+    private List<MonsterEntity> monsters;
+    private List<NPCEntity> npcs;
+
+    // ボス
+    private MonsterEntity boss;
 
     public GameScreen(AdventureRPG game) {
         this.game = game;
@@ -110,24 +123,90 @@ public class GameScreen implements Screen {
         if (game.getAudioManager() != null) {
             game.getAudioManager().playBgm("field.mp3", true);
         }
+
+        // エンティティ初期化
+        player = new PlayerEntity(mapPixelWidth / 2f, mapPixelHeight / 2f, mapPixelWidth, mapPixelHeight);
+
+        monsters = new ArrayList<>();
+        // モンスターを数体配置
+        for (int i = 0; i < 5; i++) {
+            MonsterEntity m = new MonsterEntity(
+                    MathUtils.random(0, mapPixelWidth - 32),
+                    MathUtils.random(0, mapPixelHeight - 32),
+                    mapPixelWidth, mapPixelHeight);
+            // 敵データのカスタマイズなどをここで行うことも可能
+            monsters.add(m);
+        }
+
+        npcs = new ArrayList<>();
+        // テスト用NPC (King) -> 話すと MISSION_ACCEPTED フラグを立てる
+        npcs.add(new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f + 100, "King",
+                "Brave hero! Please defeat the Demon Lord who lives in the north!", game, "MISSION_ACCEPTED", 1));
+
+        // ボス配置 (最初は隠れているか、条件付きで処理するか)
+        boss = new MonsterEntity(mapPixelWidth / 2f, mapPixelHeight / 2f + 300, mapPixelWidth, mapPixelHeight);
+        // ボス用の強力な敵データ設定
+        List<com.teamname.world.combat.ICombatant> bossParty = new ArrayList<>();
+        bossParty.add(new com.teamname.world.combat.Monster("Demon Lord", 500, 50, 30, 20, 200, 1000));
+        boss.setEnemies(bossParty);
     }
 
     private void update(float delta) {
-        float dx = 0;
-        float dy = 0;
+        // プレイヤー更新
+        player.update(delta);
 
-        // 十字キー（←→↑↓）で移動
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            dx -= CAMERA_SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            dx += CAMERA_SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            dy -= CAMERA_SPEED * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            dy += CAMERA_SPEED * delta;
+        // モンスター更新と衝突判定
+        // イテレータを使って削除可能にする（戦闘に入ったら削除するか、一時的に消すか要検討）
+        // ここではシンボルエンカウントしたら戦闘画面へ遷移し、モンスターは消滅させる実装にする
+        for (int i = 0; i < monsters.size(); i++) {
+            MonsterEntity monster = monsters.get(i);
+            monster.update(delta);
 
-        worldCamera.position.x += dx;
-        worldCamera.position.y += dy;
+            if (player.getBounds().overlaps(monster.getBounds())) {
+                // 衝突！ 戦闘開始
+                // TODO: エンカウント演出などを入れる場合はここで処理
+                game.getUIManager().showBattleUI(1); // 引数は敵IDだが現状ダミー
+
+                // 戦闘画面に遷移する直前に、実際の敵データを渡す処理は showBattleUI 内で行うか、
+                // showBattleUI を拡張して monster.getEnemies() を渡すようにする。
+                // 現状の UIManager.showBattleUI は固定の敵を生成しているので、
+                // 将来的にはここで monster.getEnemies() を渡す形にする必要がある。
+
+                // シンボルを削除
+                monsters.remove(i);
+                i--;
+
+                return;
+            }
+        }
+
+        // ボス更新 (フラグがある場合のみ)
+        if (game.getGameState().getFlag("MISSION_ACCEPTED") == 1 && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
+            boss.update(delta);
+            if (player.getBounds().overlaps(boss.getBounds())) {
+                game.getUIManager().showBattleUI(boss.getEnemies());
+                // ボス戦後は...フラグを変えるか、ここでは単純に消す（復活しない）
+                game.getGameState().setFlag("BOSS_DEFEATED", 1);
+                // ボスを画面外へ飛ばすなどで消滅扱いにする簡易実装
+                boss.setPosition(-9999, -9999);
+            }
+        }
+
+        // NPCとのインタラクト (SPACEキー)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            for (NPCEntity npc : npcs) {
+                // プレイヤーの近くにいるか判定 (boundsを少し広げるか、距離で判定)
+                float dist = com.badlogic.gdx.math.Vector2.dst(player.getX(), player.getY(), npc.getX(), npc.getY());
+                if (dist < 50) { // 50ピクセル以内
+                    npc.interact();
+                    break; // 一人に話しかけたら終了
+                }
+            }
+        }
+
+        // カメラ位置をプレイヤーに追従させる
+        worldCamera.position.x = player.getX() + player.getWidth() / 2f;
+        worldCamera.position.y = player.getY() + player.getHeight() / 2f;
 
         float halfViewWidth = worldCamera.viewportWidth * worldCamera.zoom / 2f;
         float halfViewHeight = worldCamera.viewportHeight * worldCamera.zoom / 2f;
@@ -163,6 +242,23 @@ public class GameScreen implements Screen {
         worldViewport.apply();
         mapRenderer.setView(worldCamera);
         mapRenderer.render();
+
+        batch.setProjectionMatrix(worldCamera.combined);
+        batch.begin();
+        // エンティティ描画
+        for (MonsterEntity m : monsters) {
+            m.render(batch);
+        }
+        for (NPCEntity npc : npcs) {
+            npc.render(batch);
+        }
+
+        // ボス描画
+        if (game.getGameState().getFlag("MISSION_ACCEPTED") == 1 && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
+            boss.render(batch);
+        }
+        player.render(batch);
+        batch.end();
 
         // ② ミニマップをフレームバッファに描画
         miniMapFBO.begin();

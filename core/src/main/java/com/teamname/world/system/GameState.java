@@ -8,13 +8,21 @@ public class GameState {
     // 所持金（共通）
     public int gold;
 
-    // ゲーム進行フラグ（例: イベントIDなど）
-    public int eventId;
+    // ゲーム進行フラグ（マップで管理）
+    public java.util.Map<String, Integer> flags;
 
     public GameState() {
         this.partyMembers = new java.util.ArrayList<>();
         this.gold = 100;
-        this.eventId = 0;
+        this.flags = new java.util.HashMap<>();
+    }
+
+    public void setFlag(String key, int value) {
+        flags.put(key, value);
+    }
+
+    public int getFlag(String key) {
+        return flags.getOrDefault(key, 0);
     }
 
     public void addMember(Character character) {
