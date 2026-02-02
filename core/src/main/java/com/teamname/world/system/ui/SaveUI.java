@@ -69,12 +69,15 @@ public class SaveUI {
     private void rebuildWindow() {
         stage.clear();
         Window window = new Window("Save System", skin);
-        window.setSize(400, 250);
-        window.setPosition((Gdx.graphics.getWidth() - 400) / 2f, (Gdx.graphics.getHeight() - 250) / 2f);
+
+        float w = Math.max(400, Gdx.graphics.getWidth() * 0.5f);
+        float h = Math.max(250, Gdx.graphics.getHeight() * 0.4f);
+        window.setSize(w, h);
+        window.setPosition((Gdx.graphics.getWidth() - w) / 2f, (Gdx.graphics.getHeight() - h) / 2f);
 
         Label msg = new Label("現在の進行状況をセーブしますか？", skin);
         msg.setWrap(true);
-        window.add(msg).width(350).pad(20).row();
+        window.add(msg).width(w * 0.8f).pad(20).row();
 
         Table btnTable = new Table();
 
@@ -96,8 +99,8 @@ public class SaveUI {
             }
         });
 
-        btnTable.add(yesBtn).size(150, 50).pad(10);
-        btnTable.add(noBtn).size(150, 50).pad(10);
+        btnTable.add(yesBtn).size(w * 0.35f, 50).pad(10);
+        btnTable.add(noBtn).size(w * 0.35f, 50).pad(10);
 
         window.add(btnTable).row();
         stage.addActor(window);
@@ -123,6 +126,9 @@ public class SaveUI {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (isVisible) {
+            rebuildWindow();
+        }
     }
 
     public void dispose() {

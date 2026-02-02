@@ -78,8 +78,12 @@ public class MenuTab {
     private void rebuildMenu() {
         stage.clear();
         Window window = new Window("Main Menu (ESC)", skin);
-        window.setSize(300, 400); // サイズ調整
-        window.setPosition((Gdx.graphics.getWidth() - 300) / 2f, (Gdx.graphics.getHeight() - 400) / 2f);
+
+        // 画面サイズの約40%幅、50%高さ（最小サイズ保証つき）
+        float w = Math.max(300, Gdx.graphics.getWidth() * 0.4f);
+        float h = Math.max(400, Gdx.graphics.getHeight() * 0.5f);
+        window.setSize(w, h);
+        window.setPosition((Gdx.graphics.getWidth() - w) / 2f, (Gdx.graphics.getHeight() - h) / 2f);
 
         // 閉じるボタン
         TextButton closeBtn = new TextButton("X", skin);
@@ -91,6 +95,28 @@ public class MenuTab {
         });
         // タイトルバー右
         window.getTitleTable().add(closeBtn).size(40, 40).padRight(10);
+
+        // ▼ 追加: ステータス概要（リーダー）
+        Table statusTable = new Table();
+        com.teamname.world.system.GameState state = game.getGameState();
+        com.teamname.world.system.Character leader = state.getLeader();
+
+        if (leader != null) {
+            Label nameLabel = new Label(leader.name, skin);
+            Label hpLabel = new Label("HP: " + leader.currentHp + " / " + leader.maxHp, skin);
+            Label mpLabel = new Label("MP: " + leader.currentMp + " / " + leader.maxMp, skin);
+            Label goldLabel = new Label("Gold: " + state.gold + " 円", skin);
+
+            statusTable.add(nameLabel).pad(5);
+            statusTable.add(hpLabel).pad(5);
+            statusTable.add(mpLabel).pad(5);
+            statusTable.add(goldLabel).pad(5);
+        } else {
+            statusTable.add(new Label("No Party", skin));
+        }
+
+        // ウィンドウの上部に追加
+        window.add(statusTable).center().row();
 
         Table table = new Table();
 
@@ -154,6 +180,9 @@ public class MenuTab {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (isVisible) {
+            rebuildMenu();
+        }
     }
 
     public void dispose() {

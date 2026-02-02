@@ -78,9 +78,13 @@ public class ShopUI {
     private void rebuildWindow() {
         stage.clear();
 
-        window = new Window("Shop (Sキーで開閉)", skin); // タイトル変更
-        window.setSize(600, 500);
-        window.setPosition((Gdx.graphics.getWidth() - 600) / 2f, (Gdx.graphics.getHeight() - 500) / 2f);
+        Window window = new Window("Shop (Sキーで開閉)", skin); // タイトル変更
+
+        // 画面サイズの80%幅、80%高さ
+        float w = Math.max(600, Gdx.graphics.getWidth() * 0.8f);
+        float h = Math.max(500, Gdx.graphics.getHeight() * 0.8f);
+        window.setSize(w, h);
+        window.setPosition((Gdx.graphics.getWidth() - w) / 2f, (Gdx.graphics.getHeight() - h) / 2f);
 
         // 閉じるボタン
         TextButton closeBtn = new TextButton("Close", skin);
@@ -125,9 +129,9 @@ public class ShopUI {
                 }
             });
 
-            itemTable.add(nameLabel).width(200).left().pad(5);
-            itemTable.add(priceLabel).width(100).right().pad(5);
-            itemTable.add(buyBtn).width(80).pad(5);
+            itemTable.add(nameLabel).width(w * 0.4f).left().pad(5);
+            itemTable.add(priceLabel).width(w * 0.2f).right().pad(5);
+            itemTable.add(buyBtn).width(w * 0.15f).pad(5);
             itemTable.row();
         }
 
@@ -156,6 +160,9 @@ public class ShopUI {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (isVisible) {
+            rebuildWindow();
+        }
     }
 
     public boolean isVisible() {

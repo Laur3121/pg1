@@ -73,6 +73,10 @@ public class UIManager {
         dialogUI.showDialog(text);
     }
 
+    public void showDialog(String name, String text) {
+        dialogUI.showDialog(name, text);
+    }
+
     public DialogUI getDialogUI() {
         return dialogUI;
     }
