@@ -73,7 +73,9 @@ public class EventManager {
         if (node.options != null && !node.options.isEmpty()) {
             uiManager.showDialogWithOptions(node.speakerName, node.text, node.options, this);
         } else {
-            uiManager.showDialog(node.speakerName, node.text);
+            // Even for linear dialogs, we must pass 'this' (EventManager) so that
+            // onDialogFinished() is called when the dialog closes, allowing triggerEventId to fire.
+            uiManager.showDialogWithOptions(node.speakerName, node.text, null, this);
             // If no options, it's a linear dialog. 
             // We usually wait for user input to close or advance.
             // If there's a triggerEventId, we should trigger it AFTER this dialog closes.

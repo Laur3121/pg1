@@ -76,6 +76,10 @@ public class QuestManager {
     public Map<Integer, QuestProgress> getActiveQuests() {
         return activeQuests;
     }
+    
+    public QuestData getQuestData(int questId) {
+        return questDatabase.get(questId);
+    }
 
     // For saving
     public void setActiveQuests(Map<Integer, QuestProgress> savedData) {

@@ -251,7 +251,7 @@ public class GameScreen implements Screen {
                 }
             }
         }
-
+        
         // カメラ位置をプレイヤーに追従させる
         worldCamera.position.x = player.getX() + player.getWidth() / 2f;
         worldCamera.position.y = player.getY() + player.getHeight() / 2f;

@@ -53,7 +53,7 @@ public class FontSystem {
                 "主人公戦士僧侶" + // Classes
                 "武器防具" + // Item types
                 "HPMPLvExG" + // Stats
-                "参北地巣食任準備頼期待来倒今"; // Dialog specific ("倒" Added)
+                "参北地巣食任準備頼期待来倒今依頼"; // Dialog specific ("倒" Added)
 
         BitmapFont font = generator.generateFont(parameter);
         generator.dispose(); // ジェネレーターはもう不要
