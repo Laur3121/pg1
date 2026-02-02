@@ -278,6 +278,8 @@ public class VisualCombatScreen implements Screen {
             return;
         }
 
+
+
         if (combatManager.isBattleActive()) {
             turnDelay += delta;
             if (turnDelay >= TURN_DURATION) {

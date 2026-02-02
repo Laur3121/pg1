@@ -104,3 +104,4 @@ public class AdventureRPG extends Game implements DataLoaderProvider {
         return audioManager;
     }
 }
+
