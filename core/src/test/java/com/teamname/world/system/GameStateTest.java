@@ -38,45 +38,52 @@ public class GameStateTest {
     }
 
     @Test
-    public void testInitialStats() {
-        assertEquals(50, gameState.maxHp);
-        assertEquals(10, gameState.str);
-        assertEquals(5, gameState.def);
+    public void testPartyManagement() {
+        Character hero = new Character("Hero", 100, 30, 10, 5);
+        gameState.addMember(hero);
+
+        assertEquals(1, gameState.partyMembers.size());
+        assertEquals("Hero", gameState.getLeader().name);
     }
 
     @Test
-    public void testEquipWeapon() {
-        gameState.equip(1, "WEAPON");
-        assertEquals(1, gameState.equippedWeaponId);
+    public void testCharacterStats() {
+        Character hero = new Character("Hero", 50, 20, 10, 5);
+
+        // Initial stats
+        assertEquals(50, hero.maxHp);
+        assertEquals(10, hero.str);
+        assertEquals(5, hero.def);
+    }
+
+    @Test
+    public void testEquipWeaponCalculation() {
+        Character hero = new Character("Hero", 50, 20, 10, 5);
+        // 直接IDを設定（InventoryUIの実装に合わせる）
+        hero.equippedWeaponId = 1;
 
         // Calculate Attack
-        int attack = gameState.getAttack(mockDataLoader);
+        int attack = hero.getAttack(mockDataLoader);
         assertEquals(20, attack); // 10 (Base) + 10 (Sword)
     }
 
     @Test
-    public void testEquipArmor() {
-        gameState.equip(2, "ARMOR");
-        assertEquals(2, gameState.equippedArmorId);
+    public void testEquipArmorCalculation() {
+        Character hero = new Character("Hero", 50, 20, 10, 5);
+        hero.equippedArmorId = 2;
 
         // Calculate Defense
-        int defense = gameState.getDefense(mockDataLoader);
+        int defense = hero.getDefense(mockDataLoader);
         assertEquals(10, defense); // 5 (Base) + 5 (Shield)
     }
 
     @Test
-    public void testEquipBoth() {
-        gameState.equip(1, "WEAPON");
-        gameState.equip(2, "ARMOR");
+    public void testEquipBothCalculation() {
+        Character hero = new Character("Hero", 50, 20, 10, 5);
+        hero.equippedWeaponId = 1;
+        hero.equippedArmorId = 2;
 
-        assertEquals(20, gameState.getAttack(mockDataLoader));
-        assertEquals(10, gameState.getDefense(mockDataLoader));
-    }
-
-    @Test
-    public void testEquipInvalidType() {
-        gameState.equip(1, "POTION");
-        assertEquals(0, gameState.equippedWeaponId);
-        assertEquals(0, gameState.equippedArmorId);
+        assertEquals(20, hero.getAttack(mockDataLoader));
+        assertEquals(10, hero.getDefense(mockDataLoader));
     }
 }

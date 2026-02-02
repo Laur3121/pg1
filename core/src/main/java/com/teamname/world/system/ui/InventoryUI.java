@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.teamname.world.AdventureRPG;
 import com.teamname.world.system.FontSystem;
 import com.teamname.world.system.Item;
+import com.teamname.world.system.Character; // 追加
 
 public class InventoryUI {
     private AdventureRPG game;
@@ -74,8 +75,12 @@ public class InventoryUI {
     private void rebuildWindow() {
         stage.clear();
         Window window = new Window("Inventory (B)", skin);
-        window.setSize(500, 400);
-        window.setPosition((Gdx.graphics.getWidth() - 500) / 2f, (Gdx.graphics.getHeight() - 400) / 2f);
+
+        // 画面サイズの80%幅、70%高さ
+        float w = Math.max(500, Gdx.graphics.getWidth() * 0.8f);
+        float h = Math.max(400, Gdx.graphics.getHeight() * 0.7f);
+        window.setSize(w, h);
+        window.setPosition((Gdx.graphics.getWidth() - w) / 2f, (Gdx.graphics.getHeight() - h) / 2f);
 
         // 閉じるボタン
         TextButton closeBtn = new TextButton("X", skin);
@@ -93,10 +98,17 @@ public class InventoryUI {
 
         if (game.getInventory() != null && !game.getInventory().getItems().isEmpty()) {
             for (final Item item : new java.util.ArrayList<>(game.getInventory().getItems())) {
-                // 装備中マーク
+                // 装備中マーク (誰か一人でも装備していたらEをつける)
                 String displayName = item.data.name;
-                if (game.getGameState().equippedWeaponId == item.data.id ||
-                        game.getGameState().equippedArmorId == item.data.id) {
+                boolean isEquipped = false;
+                for (Character member : game.getGameState().partyMembers) {
+                    if (member.equippedWeaponId == item.data.id || member.equippedArmorId == item.data.id) {
+                        isEquipped = true;
+                        break;
+                    }
+                }
+
+                if (isEquipped) {
                     displayName = "(E) " + displayName;
                 }
 
@@ -124,11 +136,18 @@ public class InventoryUI {
 
     private void useItem(Item item) {
         String type = item.data.type;
+        // とりあえずリーダー（先頭キャラ）に対して使用する
+        Character target = game.getGameState().getLeader();
+        if (target == null)
+            return;
 
         if ("POTION".equals(type)) {
-            System.out.println(item.data.name + " を使った！");
+            System.out.println(item.data.name + " を " + target.name + " に使った！");
             int healAmount = item.data.power > 0 ? item.data.power : 10;
-            game.getGameState().heal(healAmount);
+
+            target.currentHp += healAmount;
+            if (target.currentHp > target.maxHp)
+                target.currentHp = target.maxHp;
 
             item.quantity--;
             if (item.quantity <= 0) {
@@ -136,9 +155,13 @@ public class InventoryUI {
             }
             rebuildWindow();
 
-        } else if ("WEAPON".equals(type) || "ARMOR".equals(type)) {
-            System.out.println(item.data.name + " を装備した！");
-            game.getGameState().equip(item.data.id, type);
+        } else if ("WEAPON".equals(type)) {
+            System.out.println(item.data.name + " を " + target.name + " に装備した！");
+            target.equippedWeaponId = item.data.id;
+            rebuildWindow();
+        } else if ("ARMOR".equals(type)) {
+            System.out.println(item.data.name + " を " + target.name + " に装備した！");
+            target.equippedArmorId = item.data.id;
             rebuildWindow();
         } else {
             System.out.println("これは使えません。");
@@ -172,6 +195,9 @@ public class InventoryUI {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (isVisible) {
+            rebuildWindow();
+        }
     }
 
     public void dispose() {

@@ -2,6 +2,7 @@ package com.teamname.world.system;
 
 import com.badlogic.gdx.Gdx;
 import com.teamname.world.AdventureRPG;
+import com.teamname.world.GameScreen; // 追加
 import com.teamname.world.TitleScreen;
 import com.teamname.world.combat.VisualCombatScreen;
 import com.teamname.world.system.UIManager;
@@ -46,39 +47,61 @@ public class GameInitializer {
         }
         game.setDataLoader(dataLoader);
 
-        // 2. まずは空っぽの状態で初期化
-        Inventory inventory = new Inventory(); // 中身なし
+        // 2. 仮のGameStateとInventoryを作成（UI初期化でのNPE防止のため）
+        game.setInventory(new Inventory());
+        game.setGameState(new GameState());
+
+        // 3. UIマネージャーの初期化
+        game.setUIManager(new UIManager(game));
+
+        // 3. 戦闘画面の初期化
+        game.combatScreen = new VisualCombatScreen();
+
+        // 4. オーディオマネージャーの初期化
+        game.setAudioManager(new AudioManager());
+
+        // 5. タイトル画面へ (ここではまだゲームデータはロードしない)
+        game.setScreen(new TitleScreen(game));
+    }
+
+    /**
+     * ゲーム本編を開始する（タイトル画面から呼ばれる）
+     * 
+     * @param game    ゲームインスタンス
+     * @param isDebug デバッグモードならTrue
+     */
+    public static void startGame(AdventureRPG game, boolean isDebug) {
+        // GameStateとInventoryを初期化
+        Inventory inventory = new Inventory();
         game.setInventory(inventory);
 
-        game.setGameState(new GameState()); // HP:50, Gold:100 (デフォルト)
-
-        // 3. セーブデータがあるかチェックして分岐
-        // ※デバッグ中: セーブデータを読み込まず、常に初期状態（5000円など）で開始する
-        boolean isDebug = true;
+        GameState newState = new GameState();
+        game.setGameState(newState);
 
         if (!isDebug && Gdx.files.local("data/save.dat").exists()) {
             // --- 続きから ---
             System.out.println("セーブデータを発見。ロードします...");
-            // SaveManagerを使って、GameState(HPなど) と Inventory(アイテム) を一気にロード
             SaveManager.loadGame(game);
-
         } else {
-            // --- はじめから ---
-            System.out.println("セーブデータなし。ニューゲームを開始します。");
-            // 自分自身（GameInitializer）のメソッドを呼び出して初期アイテムを配る
+            // --- はじめから（またはデバッグ開始） ---
+            System.out.println("ニューゲーム(Debug: " + isDebug + ") を開始します。");
+
+            // 4人パーティ作成
+            newState.addMember(new Character("Hero", 100, 30, 15, 10)); // 主人公
+            newState.addMember(new Character("Warrior", 120, 10, 20, 15)); // 戦士
+            newState.addMember(new Character("Mage", 60, 50, 5, 5)); // 魔法使い
+            newState.addMember(new Character("Priest", 70, 40, 8, 8)); // 僧侶
+
+            // Debugなら所持金ボーナス
+            if (isDebug) {
+                newState.gold = 5000;
+            }
+
+            // 初期アイテム配布
             setupNewGameInventory(game.getInventory(), game.getDataLoader());
         }
 
-        // 4. UIマネージャーの初期化
-        game.setUIManager(new UIManager(game));
-
-        // 5. 戦闘画面の初期化
-        game.combatScreen = new VisualCombatScreen();
-
-        // 6. オーディオマネージャーの初期化
-        game.setAudioManager(new AudioManager());
-
-        // 7. タイトル画面へ
-        game.setScreen(new TitleScreen(game));
+        // ゲーム画面へ遷移
+        game.setScreen(new GameScreen(game));
     }
 }

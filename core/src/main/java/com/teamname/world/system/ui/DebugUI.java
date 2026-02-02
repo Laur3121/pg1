@@ -68,8 +68,11 @@ public class DebugUI {
     private void rebuildWindow() {
         stage.clear();
         Window window = new Window("Debug Menu (D)", skin);
-        window.setSize(400, 300);
-        window.setPosition((Gdx.graphics.getWidth() - 400) / 2f, (Gdx.graphics.getHeight() - 300) / 2f);
+
+        float w = Math.max(400, Gdx.graphics.getWidth() * 0.5f);
+        float h = Math.max(300, Gdx.graphics.getHeight() * 0.6f);
+        window.setSize(w, h);
+        window.setPosition((Gdx.graphics.getWidth() - w) / 2f, (Gdx.graphics.getHeight() - h) / 2f);
 
         TextButton closeBtn = new TextButton("X", skin);
         closeBtn.addListener(new ClickListener() {
@@ -104,6 +107,17 @@ public class DebugUI {
         });
         content.add(battleBtn).fillX().pad(5).row();
 
+        // Test Dialog
+        TextButton dialogBtn = new TextButton("デバッグ: 会話テスト", skin);
+        dialogBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                hide();
+                game.getUIManager().showDialog("Hero", "これはテストメッセージです。\nThis is a test message.");
+            }
+        });
+        content.add(dialogBtn).fillX().pad(5).row();
+
         // 将来的に他のデバッグ機能もここに追加可能
         // content.add(new TextButton("テスト: 戦闘開始", skin))...
 
@@ -131,6 +145,9 @@ public class DebugUI {
 
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        if (isVisible) {
+            rebuildWindow();
+        }
     }
 
     public void dispose() {
