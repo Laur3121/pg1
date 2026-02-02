@@ -14,9 +14,9 @@ public class CombatTest {
      * 簡易的な戦闘テストを実行
      */
     public static void runSimpleCombatTest() {
-        //System.out.println("\n##########################################");
-        //System.out.println("# TEST START");
-        //System.out.println("##########################################\n");
+        // System.out.println("\n##########################################");
+        // System.out.println("# TEST START");
+        // System.out.println("##########################################\n");
 
         // 戦闘マネージャーを作成
         CombatManager combatManager = new CombatManager();
@@ -32,19 +32,19 @@ public class CombatTest {
         enemies.add(new TestCharacter("slime", 50, 10, 5, 8));
         enemies.add(new TestCharacter("gobline", 60, 15, 8, 14));
 
-        //System.out.println("=== party ===");
+        // System.out.println("=== party ===");
         for (ICombatant member : party) {
-            //System.out.println(member);
+            // System.out.println(member);
         }
 
-        //System.out.println("\n=== enermy ===");
+        // System.out.println("\n=== enermy ===");
         for (ICombatant enemy : enemies) {
-            //System.out.println(enemy);
+            // System.out.println(enemy);
         }
-        //System.out.println();
+        // System.out.println();
 
         // 戦闘開始
-        combatManager.startBattle(party, enemies);
+        combatManager.startBattle(party, enemies, null);
 
         // 自動戦闘シミュレーション
         int turnCount = 0;
@@ -62,8 +62,7 @@ public class CombatTest {
             boolean isPartyMember = party.contains(actor);
 
             // ターゲットを選択
-            List<ICombatant> possibleTargets = isPartyMember ?
-                combatManager.getEnemies() : combatManager.getParty();
+            List<ICombatant> possibleTargets = isPartyMember ? combatManager.getEnemies() : combatManager.getParty();
 
             // 生存しているターゲットをフィルタリング
             List<ICombatant> aliveTargets = new ArrayList<>();
@@ -88,20 +87,20 @@ public class CombatTest {
         }
 
         // 結果表示
-        //System.out.println("\n##########################################");
-        //System.out.println("# result: " + combatManager.getBattleState());
-        //System.out.println("# total turn: " + turnCount);
-        //System.out.println("##########################################\n");
+        // System.out.println("\n##########################################");
+        // System.out.println("# result: " + combatManager.getBattleState());
+        // System.out.println("# total turn: " + turnCount);
+        // System.out.println("##########################################\n");
 
-        //System.out.println("=== result ===");
-        //System.out.println("\nyou:");
+        // System.out.println("=== result ===");
+        // System.out.println("\nyou:");
         for (ICombatant member : party) {
-            //System.out.println(member + (member.isAlive() ? " [live]" : " [dead]"));
+            // System.out.println(member + (member.isAlive() ? " [live]" : " [dead]"));
         }
 
-        //System.out.println("\nenemy:");
+        // System.out.println("\nenemy:");
         for (ICombatant enemy : enemies) {
-            //System.out.println(enemy + (enemy.isAlive() ? " [live]" : " [dead]"));
+            // System.out.println(enemy + (enemy.isAlive() ? " [live]" : " [dead]"));
         }
     }
 
