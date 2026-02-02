@@ -1,0 +1,28 @@
+{
+  "king_intro": {
+    "id": "king_intro",
+    "text": "勇者よ、よくぞ参った！\n北の地に巣食う魔王を倒してはくれぬか？",
+    "speakerName": "王様",
+    "options": [
+      {
+        "text": "はい、任せてください！",
+        "nextNodeId": "king_yes"
+      },
+      {
+        "text": "今はまだ準備が...",
+        "nextNodeId": "king_no"
+      }
+    ]
+  },
+  "king_yes": {
+    "id": "king_yes",
+    "text": "おお、頼もしい！\n期待しておるぞ。",
+    "speakerName": "王様",
+    "triggerEventId": "QUEST_START_1"
+  },
+  "king_no": {
+    "id": "king_no",
+    "text": "そうか... 準備ができたらまた来るがよい。",
+    "speakerName": "王様"
+  }
+}

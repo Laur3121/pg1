@@ -11,11 +11,21 @@ public class GameState {
     // ゲーム進行フラグ（マップで管理）
     public java.util.Map<String, Integer> flags;
 
+        // Managers
+    public com.teamname.world.system.quest.QuestManager questManager;
+    public com.teamname.world.system.event.EventManager eventManager;
+
+
     public GameState() {
         this.partyMembers = new java.util.ArrayList<>();
         this.gold = 100;
         this.flags = new java.util.HashMap<>();
-    }
+
+        // クエストマネージャーはデータロードに依存するので初期化はインスタンス生成だけしておき、
+        // 後で initialize(DataLoader) を呼び出す形か、ここで生成
+        this.questManager = new com.teamname.world.system.quest.QuestManager();
+        // EventManagerはGameInitializerで生成してセットされる
+    }   
 
     public void setFlag(String key, int value) {
         flags.put(key, value);

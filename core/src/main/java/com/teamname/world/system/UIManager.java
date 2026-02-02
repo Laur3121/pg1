@@ -76,6 +76,10 @@ public class UIManager {
     public void showDialog(String name, String text) {
         dialogUI.showDialog(name, text);
     }
+    
+    public void showDialogWithOptions(String name, String text, java.util.List<com.teamname.world.system.event.DialogOption> options, com.teamname.world.system.event.EventManager eventManager) {
+        dialogUI.showDialogWithOptions(name, text, options, eventManager);
+    }
 
     public DialogUI getDialogUI() {
         return dialogUI;

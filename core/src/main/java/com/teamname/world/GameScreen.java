@@ -173,10 +173,9 @@ public class GameScreen implements Screen {
         // テスト用NPC (King) -> 話すと MISSION_ACCEPTED フラグを立てる
         // 王様のアセットパス (160x160 -> assumes top-left is 32x32 frame)
         String kingPath = "king/pixelartKing.png";
-        // Using frame (99,99) to trigger fallback to full texture (User request: "It
-        // showed up once so that's fine")
-        npcs.add(new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 500, "King",
-                "勇者よ！北の魔王を倒してくれ！", game, "MISSION_ACCEPTED", 1, kingPath, 99, 99));
+        // New Event System Usage: Trigger "king_intro" dialog
+        NPCEntity king = new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 500, "King", "DIALOG_king_intro", game, true, kingPath, 99, 99);
+        npcs.add(king);
 
         // ボス配置 (最初は隠れているか、条件付きで処理するか)
         // ボス配置 (最初は隠れているか、条件付きで処理するか)
@@ -246,7 +245,7 @@ public class GameScreen implements Screen {
             for (NPCEntity npc : npcs) {
                 // プレイヤーの近くにいるか判定 (boundsを少し広げるか、距離で判定)
                 float dist = com.badlogic.gdx.math.Vector2.dst(player.getX(), player.getY(), npc.getX(), npc.getY());
-                if (dist < 50) { // 50ピクセル以内
+                if (dist < 80) { // 80ピクセル以内 (少し広げた)
                     npc.interact();
                     break; // 一人に話しかけたら終了
                 }
