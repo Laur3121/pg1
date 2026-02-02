@@ -126,11 +126,6 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyPressed(Input.Keys.UP))
             dy += CAMERA_SPEED * delta;
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.B)) { // Bキーで戦闘へ
-            game.setScreen(game.combatScreen);
-            game.battleflag = 1;
-        } // いずれ絶対に消す！！！！！！！！！！！！！１デバッグ用戦闘システム
-
         worldCamera.position.x += dx;
         worldCamera.position.y += dy;
 
@@ -155,7 +150,7 @@ public class GameScreen implements Screen {
 
         // メニューが開いていない時だけ操作可能
         // UIManager経由でチェック
-        if (game.getUIManager() == null || !game.getUIManager().getMenuTab().isVisible()) {
+        if (game.getUIManager() == null || !game.getUIManager().isAnyUIOpen()) {
             update(delta);
         }
 
