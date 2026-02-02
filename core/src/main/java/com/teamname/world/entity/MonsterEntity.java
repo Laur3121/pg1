@@ -1,6 +1,9 @@
 package com.teamname.world.entity;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.teamname.world.combat.ICombatant;
 import com.teamname.world.combat.Monster;
@@ -17,28 +20,67 @@ public class MonsterEntity extends Entity {
     private float speed = 50f;
     private float mapWidth, mapHeight;
 
+    private Animation<TextureRegion> walkAnimation;
+    private float stateTime = 0f;
+
     private List<ICombatant> enemiesForBattle;
 
-    public MonsterEntity(float x, float y, float mapWidth, float mapHeight) {
-        super(x, y, 32, 32);
+    public MonsterEntity(float x, float y, float mapWidth, float mapHeight, String texturePath, int frameCols,
+            int frameRows) {
+        this(x, y, mapWidth, mapHeight, texturePath, frameCols, frameRows, -1);
+    }
+
+    public MonsterEntity(float x, float y, float mapWidth, float mapHeight, String texturePath, int frameCols,
+            int frameRows, int maxFrames) {
+        super(x, y, 64, 64);
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
 
-        // Placeholder texture (Red box)
-        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32,
-                com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        pixmap.setColor(com.badlogic.gdx.graphics.Color.RED);
-        pixmap.fill();
-        this.texture = new Texture(pixmap);
-        pixmap.dispose();
+        // Load texture from path and create animation
+        this.texture = new Texture(com.badlogic.gdx.Gdx.files.internal(texturePath));
+
+        // Use frameCols and frameRows to split
+        TextureRegion[][] tmp = TextureRegion.split(this.texture, this.texture.getWidth() / frameCols,
+                this.texture.getHeight() / frameRows);
+
+        // Flatten or select frames
+        // Assumes row 0 for now as previously
+        TextureRegion[] frames;
+        if (maxFrames > 0 && maxFrames <= tmp[0].length) {
+            frames = new TextureRegion[maxFrames];
+            System.arraycopy(tmp[0], 0, frames, 0, maxFrames);
+        } else {
+            frames = tmp[0];
+        }
+
+        walkAnimation = new Animation<>(0.1f, frames);
+        walkAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
         // Default enemies
         enemiesForBattle = new ArrayList<>();
         enemiesForBattle.add(new Monster("Slime", 30, 10, 2, 5, 10, 5));
     }
 
+    // Overloaded constructor for backward compatibility (defaults to 6 cols, 1 row
+    // for regular monsters)
+    public MonsterEntity(float x, float y, float mapWidth, float mapHeight, String texturePath) {
+        this(x, y, mapWidth, mapHeight, texturePath, 6, 1);
+    }
+
+    // Previous overload for Boss with just cols (assumes 1 row) - DEPRECATED but
+    // keeping for safety if needed,
+    // but better to remove or update usage. I will update usage in GameScreen
+    // instead.
+    public MonsterEntity(float x, float y, float mapWidth, float mapHeight, String texturePath, int frameCols) {
+        this(x, y, mapWidth, mapHeight, texturePath, frameCols, 1);
+    }
+
     public void setEnemies(List<ICombatant> enemies) {
         this.enemiesForBattle = enemies;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
     }
 
     public List<ICombatant> getEnemies() {
@@ -47,6 +89,7 @@ public class MonsterEntity extends Entity {
 
     @Override
     public void update(float delta) {
+        stateTime += delta;
         // Simple Random Walk AI
         moveTimer -= delta;
         if (moveTimer <= 0) {
@@ -69,5 +112,11 @@ public class MonsterEntity extends Entity {
         y = MathUtils.clamp(y, 0, mapHeight - height);
 
         bounds.setPosition(x, y);
+    }
+
+    @Override
+    public void render(SpriteBatch batch) {
+        TextureRegion currentFrame = walkAnimation.getKeyFrame(stateTime, true);
+        batch.draw(currentFrame, x, y, width, height);
     }
 }
