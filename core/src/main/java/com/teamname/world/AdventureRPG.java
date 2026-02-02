@@ -11,7 +11,9 @@ import com.teamname.world.system.UIManager;
 import com.teamname.world.system.AudioManager;
 import com.teamname.world.system.GameState;
 
-public class AdventureRPG extends Game {
+import com.teamname.world.combat.DataLoaderProvider;
+
+public class AdventureRPG extends Game implements DataLoaderProvider {
 
     private SpriteBatch batch;
 

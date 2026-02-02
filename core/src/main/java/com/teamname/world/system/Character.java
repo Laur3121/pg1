@@ -1,6 +1,8 @@
 package com.teamname.world.system;
 
-public class Character {
+import com.teamname.world.combat.ICombatant;
+
+public class Character implements ICombatant {
     public String name;
     public int level;
     public int exp;
@@ -33,6 +35,71 @@ public class Character {
         this.exp = 0;
         this.equippedWeaponId = -1;
         this.equippedArmorId = -1;
+    }
+
+    // ICombatant implementation
+    private com.teamname.world.combat.DataLoaderProvider dataLoaderProvider;
+
+    public void setDataLoaderProvider(com.teamname.world.combat.DataLoaderProvider provider) {
+        this.dataLoaderProvider = provider;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public int getCurrentHP() {
+        return currentHp;
+    }
+
+    @Override
+    public int getMaxHP() {
+        return maxHp;
+    }
+
+    @Override
+    public boolean isAlive() {
+        return currentHp > 0;
+    }
+
+    @Override
+    public void takeDamage(int damage) {
+        currentHp -= damage;
+        if (currentHp < 0)
+            currentHp = 0;
+    }
+
+    @Override
+    public void heal(int amount) {
+        currentHp += amount;
+        if (currentHp > maxHp)
+            currentHp = maxHp;
+    }
+
+    @Override
+    public int getSpeed() {
+        // 素早さは仮実装（レベルベースなど）
+        return 10 + level;
+    }
+
+    @Override
+    public int getAttackPower() {
+        // DataLoaderが必要だが、インターフェースには引数がないため、
+        // 簡易的にフィールドのstrを返すか、別途注入されたloaderを使う
+        if (dataLoaderProvider != null) {
+            return getAttack(dataLoaderProvider.getDataLoader());
+        }
+        return str;
+    }
+
+    @Override
+    public int getDefense() {
+        if (dataLoaderProvider != null) {
+            return getDefense(dataLoaderProvider.getDataLoader());
+        }
+        return def;
     }
 
     // ステータス計算ヘルパー

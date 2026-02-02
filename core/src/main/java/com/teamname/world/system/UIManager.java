@@ -82,11 +82,33 @@ public class UIManager {
     }
 
     // --- 戦闘関連 ---
+    // --- 戦闘関連 ---
     public void showBattleUI(int enemyId) {
-        // TODO: セットアップ
-        System.out.println("Battle Started with Enemy ID: " + enemyId);
+        // 敵生成
+        java.util.List<com.teamname.world.combat.ICombatant> enemies = new java.util.ArrayList<>();
+        // とりあえずIDに関わらず固定の敵セット
+        enemies.add(new com.teamname.world.combat.Monster("Evil Mage", 80, 18, 8, 14, 50, 100));
+        enemies.add(new com.teamname.world.combat.Monster("Archer", 60, 16, 5, 16, 40, 80));
+
+        showBattleUI(enemies);
+    }
+
+    public void showBattleUI(java.util.List<com.teamname.world.combat.ICombatant> enemies) {
+        // パーティ取得
+        java.util.List<com.teamname.world.combat.ICombatant> party = new java.util.ArrayList<>();
+        if (game.getGameState() != null && game.getGameState().partyMembers != null) {
+            party.addAll(game.getGameState().partyMembers);
+        }
+
+        System.out.println("Battle Started with " + enemies.size() + " enemies.");
+
+        // 戦闘画面初期化
+        if (game.combatScreen != null) {
+            game.combatScreen.startBattle(party, enemies, game.getGameState());
+        }
+
         game.battleflag = 1;
-        game.setScreen(game.combatScreen);
+        // GameScreen内でbattleflagを見て描画切り替えを行うため、setScreenはしない
     }
 
     public void addBattleLog(String message) {

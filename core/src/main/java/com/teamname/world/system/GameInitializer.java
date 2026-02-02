@@ -55,7 +55,7 @@ public class GameInitializer {
         game.setUIManager(new UIManager(game));
 
         // 3. 戦闘画面の初期化
-        game.combatScreen = new VisualCombatScreen();
+        game.combatScreen = new VisualCombatScreen(game);
 
         // 4. オーディオマネージャーの初期化
         game.setAudioManager(new AudioManager());
@@ -87,10 +87,21 @@ public class GameInitializer {
             System.out.println("ニューゲーム(Debug: " + isDebug + ") を開始します。");
 
             // 4人パーティ作成
-            newState.addMember(new Character("Hero", 100, 30, 15, 10)); // 主人公
-            newState.addMember(new Character("Warrior", 120, 10, 20, 15)); // 戦士
-            newState.addMember(new Character("Mage", 60, 50, 5, 5)); // 魔法使い
-            newState.addMember(new Character("Priest", 70, 40, 8, 8)); // 僧侶
+            Character hero = new Character("Hero", 100, 30, 15, 10);
+            hero.setDataLoaderProvider(game);
+            newState.addMember(hero);
+
+            Character warrior = new Character("Warrior", 120, 10, 20, 15);
+            warrior.setDataLoaderProvider(game);
+            newState.addMember(warrior);
+
+            Character mage = new Character("Mage", 60, 50, 5, 5);
+            mage.setDataLoaderProvider(game);
+            newState.addMember(mage);
+
+            Character priest = new Character("Priest", 70, 40, 8, 8);
+            priest.setDataLoaderProvider(game);
+            newState.addMember(priest);
 
             // Debugなら所持金ボーナス
             if (isDebug) {

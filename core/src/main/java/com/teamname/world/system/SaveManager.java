@@ -135,7 +135,9 @@ public class SaveManager {
             }
             if (data.party != null) {
                 for (CharacterData cd : data.party) {
-                    state.addMember(cd.toCharacter());
+                    Character c = cd.toCharacter();
+                    c.setDataLoaderProvider(game);
+                    state.addMember(c);
                 }
             }
 
