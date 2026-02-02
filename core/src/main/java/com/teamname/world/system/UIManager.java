@@ -100,6 +100,18 @@ public class UIManager {
             party.addAll(game.getGameState().partyMembers);
         }
 
+        // デバッグ: パーティが空の場合はデフォルトのHeroを追加（セーブデータ不整合対策）
+        if (party.isEmpty()) {
+            System.out.println("Warning: Party is empty. Adding default Hero.");
+            com.teamname.world.system.Character hero = new com.teamname.world.system.Character("Hero", 100, 30, 15, 10);
+            hero.setDataLoaderProvider(game);
+            party.add(hero);
+            // GameStateにも反映しておく
+            if (game.getGameState() != null) {
+                game.getGameState().addMember(hero);
+            }
+        }
+
         System.out.println("Battle Started with " + enemies.size() + " enemies.");
 
         // 戦闘画面初期化

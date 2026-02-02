@@ -15,11 +15,12 @@ public class TestCharacter implements ICombatant {
 
     /**
      * コンストラクタ
-     * @param name 名前
-     * @param maxHP 最大HP
+     * 
+     * @param name        名前
+     * @param maxHP       最大HP
      * @param attackPower 攻撃力
-     * @param defense 防御力
-     * @param speed 素早さ
+     * @param defense     防御力
+     * @param speed       素早さ
      */
     public TestCharacter(String name, int maxHP, int attackPower, int defense, int speed) {
         this.name = name;
@@ -56,7 +57,7 @@ public class TestCharacter implements ICombatant {
         if (currentHP < 0) {
             currentHP = 0;
         }
-        //System.out.println(name + " HP: " + currentHP + "/" + maxHP);
+        // System.out.println(name + " HP: " + currentHP + "/" + maxHP);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class TestCharacter implements ICombatant {
         if (currentHP > maxHP) {
             currentHP = maxHP;
         }
-        //System.out.println(name + " HP: " + currentHP + "/" + maxHP);
+        // System.out.println(name + " HP: " + currentHP + "/" + maxHP);
     }
 
     @Override
@@ -84,7 +85,13 @@ public class TestCharacter implements ICombatant {
     }
 
     @Override
+    public String getTextureKey() {
+        return "warrior"; // テスト用デフォルト
+    }
+
+    @Override
     public String toString() {
-        return name + " [HP:" + currentHP + "/" + maxHP + " ATK:" + attackPower + " DEF:" + defense + " SPD:" + speed + "]";
+        return name + " [HP:" + currentHP + "/" + maxHP + " ATK:" + attackPower + " DEF:" + defense + " SPD:" + speed
+                + "]";
     }
 }

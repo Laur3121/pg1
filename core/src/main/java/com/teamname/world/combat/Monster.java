@@ -9,9 +9,13 @@ public class Monster implements ICombatant {
     private int speed;
     private int exp;
     private int gold;
-    // ドロップアイテムIDなどを後で追加可能
+    private String textureKey;
 
     public Monster(String name, int hp, int attack, int defense, int speed, int exp, int gold) {
+        this(name, hp, attack, defense, speed, exp, gold, "1"); // デフォルトキー
+    }
+
+    public Monster(String name, int hp, int attack, int defense, int speed, int exp, int gold, String textureKey) {
         this.name = name;
         this.maxHp = hp;
         this.currentHp = hp;
@@ -20,6 +24,7 @@ public class Monster implements ICombatant {
         this.speed = speed;
         this.exp = exp;
         this.gold = gold;
+        this.textureKey = textureKey;
     }
 
     @Override
@@ -77,5 +82,10 @@ public class Monster implements ICombatant {
 
     public int getGold() {
         return gold;
+    }
+
+    @Override
+    public String getTextureKey() {
+        return textureKey;
     }
 }

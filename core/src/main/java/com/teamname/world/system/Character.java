@@ -124,4 +124,16 @@ public class Character implements ICombatant {
         }
         return totalDef;
     }
+
+    @Override
+    public String getTextureKey() {
+        // 名前や職業に応じて返すキーを変える
+        if (name.equalsIgnoreCase("Warrior") || name.equalsIgnoreCase("Hero"))
+            return "warrior";
+        if (name.equalsIgnoreCase("Mage"))
+            return "evilmage"; // 味方メイジの画像があればそれに変える
+        if (name.equalsIgnoreCase("Priest"))
+            return "archer"; // 仮
+        return "warrior"; // デフォルト
+    }
 }

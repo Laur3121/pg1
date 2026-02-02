@@ -157,15 +157,20 @@ public class GameScreen implements Screen {
         monsters = new ArrayList<>();
         // モンスターを数体配置
         for (int i = 0; i < 40; i++) {
-            // 1~4のフォルダからランダムに選択
-            int type = MathUtils.random(1, 4);
-            String path = "free-field-enemies-pixel-art-for-tower-defense/" + type + "/D_Walk.png";
+            // 1〜4の中からランダムな種類を選択
+            int typeId = MathUtils.random(1, 4);
+            String texturePath = "free-field-enemies-pixel-art-for-tower-defense/" + typeId + "/S_Walk.png";
 
             MonsterEntity m = new MonsterEntity(
                     MathUtils.random(0, mapPixelWidth - 32),
                     MathUtils.random(0, mapPixelHeight - 32),
-                    mapPixelWidth, mapPixelHeight, path);
-            // 敵データのカスタマイズなどをここで行うことも可能
+                    mapPixelWidth, mapPixelHeight, texturePath); // コンストラクタは既存のものは6カラム前提だが、S_Walkは1枚絵に近い可能性がある。要確認。
+
+            // TextureRegionの分割を確認。S_Walk.pngは横長？リソースの中身を見てないので
+            // 一旦既存のコンストラクタ(6cols)を使うが、もしアニメーションがおかしかったら修正が必要。
+            // リストを見ると S_Walk.png は1ファイル。おそらく横に並んでいる。
+
+            m.setTextureKey(String.valueOf(typeId));
             monsters.add(m);
         }
 
@@ -209,7 +214,7 @@ public class GameScreen implements Screen {
             if (player.getBounds().overlaps(monster.getBounds())) {
                 // 衝突！ 戦闘開始
                 // TODO: エンカウント演出などを入れる場合はここで処理
-                game.getUIManager().showBattleUI(1); // 引数は敵IDだが現状ダミー
+                game.getUIManager().showBattleUI(monster.getEnemies());
 
                 // 戦闘画面に遷移する直前に、実際の敵データを渡す処理は showBattleUI 内で行うか、
                 // showBattleUI を拡張して monster.getEnemies() を渡すようにする。

@@ -75,8 +75,19 @@ public class MonsterEntity extends Entity {
         this(x, y, mapWidth, mapHeight, texturePath, frameCols, 1);
     }
 
+    private String textureKey = "1"; // デフォルト
+
     public void setEnemies(List<ICombatant> enemies) {
         this.enemiesForBattle = enemies;
+    }
+
+    // テクスチャキーを設定（GameScreenから呼ばれる）
+    public void setTextureKey(String key) {
+        this.textureKey = key;
+        // キーに応じて、デフォルトの敵グループを再設定する
+        enemiesForBattle = new ArrayList<>();
+        // ※詳細なパラメータ調整は将来的にJSON等で行うべき
+        enemiesForBattle.add(new Monster("Monster " + key, 50, 10, 5, 10, 20, 10, key));
     }
 
     public void setSpeed(float speed) {
