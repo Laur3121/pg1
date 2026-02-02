@@ -20,12 +20,17 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.teamname.world.entity.PlayerEntity;
 import com.teamname.world.entity.MonsterEntity;
 import com.teamname.world.entity.NPCEntity;
+import com.teamname.world.system.FontSystem;
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 public class GameScreen implements Screen {
 
@@ -67,6 +72,10 @@ public class GameScreen implements Screen {
 
     // ボス
     private MonsterEntity boss;
+
+    // Game Clear UI
+    private Label gameClearLabel;
+    private BitmapFont gameClearFont;
 
     public GameScreen(AdventureRPG game) {
         this.game = game;
@@ -111,10 +120,28 @@ public class GameScreen implements Screen {
 
         // Stage（UI用）とミニマップ画像
         stage = new Stage(new ScreenViewport());
+
+        // UI Table for organization
+        Table uiTable = new Table();
+        uiTable.setFillParent(true);
+        stage.addActor(uiTable);
+
+        // MiniMap Image (Raw actor added to stage previously, but let's keep it
+        // independent of table or add to table)
+        // Original code added Image directly. Let's keep Image as is, and use Table for
+        // centering text.
+
         miniMapImage = new Image();
         miniMapImage.setSize(miniWidth, miniHeight);
         miniMapImage.setPosition(screenW - miniWidth, screenH - miniHeight);
         stage.addActor(miniMapImage);
+
+        // Game Clear Label
+        gameClearFont = FontSystem.createJapaneseFont(64);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(gameClearFont, Color.GOLD);
+        gameClearLabel = new Label("GAME CLEAR", labelStyle);
+        gameClearLabel.setVisible(false);
+        uiTable.add(gameClearLabel).center();
 
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
@@ -125,29 +152,46 @@ public class GameScreen implements Screen {
         }
 
         // エンティティ初期化
-        player = new PlayerEntity(mapPixelWidth / 2f, mapPixelHeight / 2f, mapPixelWidth, mapPixelHeight);
+        player = new PlayerEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 550, mapPixelWidth, mapPixelHeight);
 
         monsters = new ArrayList<>();
         // モンスターを数体配置
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 40; i++) {
+            // 1~4のフォルダからランダムに選択
+            int type = MathUtils.random(1, 4);
+            String path = "free-field-enemies-pixel-art-for-tower-defense/" + type + "/D_Walk.png";
+
             MonsterEntity m = new MonsterEntity(
                     MathUtils.random(0, mapPixelWidth - 32),
                     MathUtils.random(0, mapPixelHeight - 32),
-                    mapPixelWidth, mapPixelHeight);
+                    mapPixelWidth, mapPixelHeight, path);
             // 敵データのカスタマイズなどをここで行うことも可能
             monsters.add(m);
         }
 
         npcs = new ArrayList<>();
         // テスト用NPC (King) -> 話すと MISSION_ACCEPTED フラグを立てる
-        npcs.add(new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f + 100, "King",
-                "Brave hero! Please defeat the Demon Lord who lives in the north!", game, "MISSION_ACCEPTED", 1));
+        // 王様のアセットパス (160x160 -> assumes top-left is 32x32 frame)
+        String kingPath = "king/pixelartKing.png";
+        // Using frame (99,99) to trigger fallback to full texture (User request: "It
+        // showed up once so that's fine")
+        npcs.add(new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 500, "King",
+                "勇者よ！北の魔王を倒してくれ！", game, "MISSION_ACCEPTED", 1, kingPath, 99, 99));
 
         // ボス配置 (最初は隠れているか、条件付きで処理するか)
-        boss = new MonsterEntity(mapPixelWidth / 2f, mapPixelHeight / 2f + 300, mapPixelWidth, mapPixelHeight);
+        // ボス配置 (最初は隠れているか、条件付きで処理するか)
+        // ボスは DeamonKing/Devil.png (1872x64). Assuming 48x64 frames -> 39 cols.
+        // Limit to 6 frames for Idle animation
+        String bossPath = "DeamonKing/Devil.png";
+        boss = new MonsterEntity(mapPixelWidth / 2f, mapPixelHeight - 100, mapPixelWidth, mapPixelHeight, bossPath,
+                39, 1, 6);
+        // User request: Bigger size, higher up (top of land), no movement
+        boss.setSize(128, 128);
+        boss.setSpeed(0);
+
         // ボス用の強力な敵データ設定
         List<com.teamname.world.combat.ICombatant> bossParty = new ArrayList<>();
-        bossParty.add(new com.teamname.world.combat.Monster("Demon Lord", 500, 50, 30, 20, 200, 1000));
+        bossParty.add(new com.teamname.world.combat.Monster("Demon King", 1000, 80, 40, 30, 500, 5000));
         boss.setEnemies(bossParty);
     }
 
@@ -189,11 +233,16 @@ public class GameScreen implements Screen {
                 game.getGameState().setFlag("BOSS_DEFEATED", 1);
                 // ボスを画面外へ飛ばすなどで消滅扱いにする簡易実装
                 boss.setPosition(-9999, -9999);
+
+                // Show Game Clear
+                if (gameClearLabel != null) {
+                    gameClearLabel.setVisible(true);
+                }
             }
         }
 
-        // NPCとのインタラクト (SPACEキー)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+        // NPCとのインタラクト (Fキー)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             for (NPCEntity npc : npcs) {
                 // プレイヤーの近くにいるか判定 (boundsを少し広げるか、距離で判定)
                 float dist = com.badlogic.gdx.math.Vector2.dst(player.getX(), player.getY(), npc.getX(), npc.getY());
@@ -346,5 +395,7 @@ public class GameScreen implements Screen {
             batch.dispose();
         if (stage != null)
             stage.dispose();
+        if (gameClearFont != null)
+            gameClearFont.dispose();
     }
 }

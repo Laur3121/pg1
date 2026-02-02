@@ -3,6 +3,10 @@ package com.teamname.world.entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.MathUtils;
 
 public class PlayerEntity extends Entity {
@@ -10,18 +14,22 @@ public class PlayerEntity extends Entity {
     private float speed = 200f;
     private float mapWidth, mapHeight;
 
+    private Animation<TextureRegion> idleAnimation; // Add other animations later
+    private float stateTime = 0f;
+
     public PlayerEntity(float x, float y, float mapWidth, float mapHeight) {
         super(x, y, 32, 32); // 32x32 size
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
 
-        // Placeholder texture (white box) if asset not available
-        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32,
-                com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        pixmap.setColor(com.badlogic.gdx.graphics.Color.CYAN);
-        pixmap.fill();
-        this.texture = new Texture(pixmap);
-        pixmap.dispose();
+        // Load animation frames (hardcoded path based on request for now, or pass in)
+        // assets/evil Mage Pack/warriar/idle/1.png to 4.png
+        Array<TextureRegion> frames = new Array<>();
+        for (int i = 1; i <= 4; i++) {
+            Texture texture = new Texture(Gdx.files.internal("evil Mage Pack/warriar/idle/" + i + ".png"));
+            frames.add(new TextureRegion(texture));
+        }
+        idleAnimation = new Animation<>(0.2f, frames, Animation.PlayMode.LOOP);
     }
 
     public void setTexture(Texture texture) {
@@ -32,6 +40,7 @@ public class PlayerEntity extends Entity {
 
     @Override
     public void update(float delta) {
+        stateTime += delta;
         float dx = 0;
         float dy = 0;
 
@@ -52,5 +61,11 @@ public class PlayerEntity extends Entity {
         y = MathUtils.clamp(y, 0, mapHeight - height);
 
         bounds.setPosition(x, y);
+    }
+
+    @Override
+    public void render(SpriteBatch batch) {
+        TextureRegion currentFrame = idleAnimation.getKeyFrame(stateTime, true);
+        batch.draw(currentFrame, x, y, width, height);
     }
 }

@@ -54,6 +54,12 @@ public abstract class Entity {
         this.bounds.setPosition(x, y);
     }
 
+    public void setSize(float width, float height) {
+        this.width = width;
+        this.height = height;
+        this.bounds.setSize(width, height);
+    }
+
     public void dispose() {
         if (texture != null) {
             texture.dispose();
