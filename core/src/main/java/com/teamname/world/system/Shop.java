@@ -65,12 +65,13 @@ public class Shop {
 
         // インベントリから削除（未実装機能ですが、あると仮定して減らす処理）
         // 現状のInventoryにはremoveItemがないため、まずは個数を減らすか、メッセージのみとします
-        if (item.quantity > 0) {
-            item.quantity--;
-            // 0になったら本来はリストから消すべきですが、簡易実装として個数減のみ
-
+        // インベントリから削除
+        int removedCount = inventory.removeItem(item.data, 1);
+        if (removedCount > 0) {
             playerState.gold += sellPrice;
-            System.out.println(item.data.name + "を売却しました。獲得: " + sellPrice + "G");
+            System.out.println(item.data.name + "を売却しました。獲得: " + sellPrice + "円");
+        } else {
+            System.out.println("売却に失敗しました（アイテムがありません）。");
         }
     }
 }

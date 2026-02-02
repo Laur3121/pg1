@@ -32,8 +32,16 @@ public class SaveManager {
             // 1. GameStateの数値を書き込む
             GameState state = game.getGameState();
             out.writeInt(state.currentHp); // HP
-            out.writeInt(state.maxHp);     // MaxHP
-            out.writeInt(state.gold);      // Gold
+            out.writeInt(state.maxHp); // MaxHP
+            out.writeInt(state.currentMp); // MP
+            out.writeInt(state.maxMp); // MaxMP
+            out.writeInt(state.gold); // Gold
+            out.writeInt(state.level);
+            out.writeInt(state.exp);
+            out.writeInt(state.str);
+            out.writeInt(state.def);
+            out.writeInt(state.equippedWeaponId);
+            out.writeInt(state.equippedArmorId);
 
             // 2. インベントリのアイテムを書き込む
             // アイテムそのものではなく、「ID」と「個数」だけを記録する
@@ -72,7 +80,15 @@ public class SaveManager {
             GameState state = game.getGameState();
             state.currentHp = in.readInt();
             state.maxHp = in.readInt();
+            state.currentMp = in.readInt();
+            state.maxMp = in.readInt();
             state.gold = in.readInt();
+            state.level = in.readInt();
+            state.exp = in.readInt();
+            state.str = in.readInt();
+            state.def = in.readInt();
+            state.equippedWeaponId = in.readInt();
+            state.equippedArmorId = in.readInt();
 
             // 2. インベントリを復元する
             // まず一度空にする
@@ -83,7 +99,7 @@ public class SaveManager {
             int itemCount = in.readInt();
 
             for (int i = 0; i < itemCount; i++) {
-                int id = in.readInt();       // IDを読む
+                int id = in.readInt(); // IDを読む
                 int quantity = in.readInt(); // 個数を読む
 
                 // IDを使って、DataLoaderから本来のアイテム情報(名前や説明文)を取得する

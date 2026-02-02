@@ -109,8 +109,7 @@ public class MenuTab {
                 toggle();
             }
         });
-        window.getTitleTable().add(closeBtn).size(60, 60).padRight(10);
-        ;
+        window.getTitleTable().add(closeBtn).size(40, 40).padRight(10);
 
         // セーブボタン
         TextButton saveBtn = new TextButton("SAVE", skin);
@@ -131,10 +130,22 @@ public class MenuTab {
         com.teamname.world.system.GameState state = game.getGameState();
 
         Label hpLabel = new Label("HP: " + state.currentHp + " / " + state.maxHp, skin);
-        Label goldLabel = new Label("Gold: " + state.gold + " G", skin);
+        Label mpLabel = new Label("MP: " + state.currentMp + " / " + state.maxMp, skin); // MP追加
+        Label goldLabel = new Label("Gold: " + state.gold + " 円", skin);
 
-        statusTable.add(hpLabel).pad(10);
-        statusTable.add(goldLabel).pad(10);
+        // ステータス表示（DataLoaderが必要）
+        com.teamname.world.system.DataLoader loader = game.getDataLoader();
+        Label atkLabel = new Label("ATK: " + state.getAttack(loader), skin);
+        Label defLabel = new Label("DEF: " + state.getDefense(loader), skin);
+        Label lvLabel = new Label("LV: " + state.level, skin);
+
+        statusTable.add(lvLabel).pad(5);
+        statusTable.add(hpLabel).pad(5);
+        statusTable.add(mpLabel).pad(5);
+        statusTable.row();
+        statusTable.add(atkLabel).pad(5);
+        statusTable.add(defLabel).pad(5);
+        statusTable.add(goldLabel).pad(5);
 
         // ウィンドウの上部に追加
         window.add(statusTable).center().row();
@@ -149,8 +160,15 @@ public class MenuTab {
         if (inventory != null && !inventory.getItems().isEmpty()) {
             for (final Item item : new java.util.ArrayList<>(inventory.getItems())) {
 
+                // 装備中ならマークをつける
+                String displayName = item.data.name;
+                com.teamname.world.system.GameState gs = game.getGameState();
+                if (gs.equippedWeaponId == item.data.id || gs.equippedArmorId == item.data.id) {
+                    displayName = "(E) " + displayName;
+                }
+
                 // ※注意: item.data.name が日本語だと文字化けして表示されません。今は英語推奨です。
-                TextButton itemButton = new TextButton(item.data.name, skin);
+                TextButton itemButton = new TextButton(displayName, skin);
                 itemButton.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
@@ -174,6 +192,7 @@ public class MenuTab {
     }
 
     // ▼ アイテム使用のロジック
+    // ▼ アイテム使用のロジック
     private void useItem(Item item) {
         String type = item.data.type; // JSONにある "POTION" や "WEAPON"
 
@@ -182,8 +201,9 @@ public class MenuTab {
             System.out.println(item.data.name + " を使った！");
 
             // GameStateのHPを回復させる
-            // item.data.value を回復量として使ってもいいですね
-            game.getGameState().heal(item.data.value);
+            // item.data.power を回復量として使う（以前はvalueだったがpowerに変更）
+            int healAmount = item.data.power > 0 ? item.data.power : 10; // デフォルト10
+            game.getGameState().heal(healAmount);
 
             // アイテムを1つ減らす
             item.quantity--;
@@ -194,17 +214,18 @@ public class MenuTab {
             // 画面を再描画して、個数やアイテム一覧を更新する
             rebuildMenu();
 
-        } else if ("WEAPON".equals(type)) {
+        } else if ("WEAPON".equals(type) || "ARMOR".equals(type)) {
             // 装備品の場合
-            System.out.println(item.data.name + " を装備した！（未実装）");
-            // 装備ロジックはまだないので、メッセージだけ
+            System.out.println(item.data.name + " を装備した！");
+            game.getGameState().equip(item.data.id, type);
+            rebuildMenu(); // 装備マーク更新などのため再描画
         } else {
             System.out.println("これは使えません。");
         }
     }
 
     public void updateAndRender(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             toggle();
         }
         if (isVisible) {
