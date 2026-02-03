@@ -65,6 +65,83 @@ public class VisualCombatScreen implements Screen {
     private float stateTime;
     private float turnDelay;
 
+    // Lucky Time Fields
+    private boolean isLuckyTimeActive = false;
+    private float luckyTimer = 0;
+    private int[] luckySlots = new int[3];
+    private boolean isLuckyJackpot = false;
+    private int totalTurnCounter = 0;
+
+    private void startLuckyTime() {
+        isLuckyTimeActive = true;
+        luckyTimer = 0;
+        isLuckyJackpot = Math.random() < 0.33; // 1/3 Chance
+        addLog(">>> LUCKY TIME CHANCE! <<<");
+    }
+
+    private void updateLuckyTime(float delta) {
+        luckyTimer += delta;
+
+        // Slot Animation (Randomize numbers)
+        if (luckyTimer < 2.0f) {
+            for (int i = 0; i < 3; i++)
+                luckySlots[i] = (int) (Math.random() * 9) + 1;
+        } else {
+            // Result
+            if (isLuckyJackpot) {
+                luckySlots[0] = 7;
+                luckySlots[1] = 7;
+                luckySlots[2] = 7;
+            } else {
+                // Force mismatch if needed, or just leave random (small chance of random match,
+                // ok)
+                if (luckySlots[0] == luckySlots[1] && luckySlots[1] == luckySlots[2]) {
+                    luckySlots[2] = (luckySlots[2] % 9) + 1;
+                }
+            }
+
+            // Wait 1.5s then finish
+            if (luckyTimer > 3.5f) {
+                isLuckyTimeActive = false;
+                if (isLuckyJackpot) {
+                    combatManager.setDamageMultiplier(100000.0f);
+                    addLog("JACKPOT! 777! Damage x100000!");
+                } else {
+                    addLog("Miss... Normal Damage.");
+                }
+                prepareTurn();
+            }
+        }
+    }
+
+    private void drawLuckyTime() {
+        // Yellow Flashing Background
+        float alpha = (Math.sin(luckyTimer * 20) > 0) ? 0.5f : 0.2f;
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(1f, 1f, 0f, alpha);
+        shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // Draw Slots
+        batch.begin();
+        font.getData().setScale(5.0f);
+        font.setColor(Color.RED);
+        String slotText = luckySlots[0] + " " + luckySlots[1] + " " + luckySlots[2];
+        GlyphLayout layout = new GlyphLayout(font, slotText);
+        font.draw(batch, slotText, (Gdx.graphics.getWidth() - layout.width) / 2, Gdx.graphics.getHeight() / 2);
+
+        font.getData().setScale(2.0f);
+        font.setColor(Color.WHITE);
+        String title = "LUCKY TIME!!";
+        GlyphLayout titleLayout = new GlyphLayout(font, title);
+        font.draw(batch, title, (Gdx.graphics.getWidth() - titleLayout.width) / 2, Gdx.graphics.getHeight() / 2 + 100);
+
+        font.getData().setScale(1.5f);
+        batch.end();
+    }
+
     // ゲーム本体への参照（画面切り替え用）
     private final com.teamname.world.AdventureRPG game;
 
@@ -214,10 +291,15 @@ public class VisualCombatScreen implements Screen {
                 loadTextureSplit(prefix + "_attack1", folder + "S_Special.png", 6, 1);
             } else if (i == 2 || i == 3) {
                 loadTextureSplit(prefix + "_attack1", folder + "S_Attack.png", 6, 1);
-            } else {
                 loadTextureSplit(prefix + "_attack1", folder + "S_Walk.png", 6, 1);
             }
         }
+
+        // Demon King
+        // DeamonKing/Devil.png: 39 cols, 1 row (assumed). Using first 6 for Idle.
+        loadTextureSplit("demon_king_idle", "DeamonKing/Devil.png", 6, 1);
+        loadTextureSplit("demon_king_walk1", "DeamonKing/Devil.png", 6, 1);
+        loadTextureSplit("demon_king_attack1", "DeamonKing/Devil.png", 6, 1);
     }
 
     private void loadTextureSafe(String key, String path) {
@@ -289,7 +371,19 @@ public class VisualCombatScreen implements Screen {
         addLog("=== Battle Start! ===");
 
         // BGM再生
-        game.getAudioManager().playBgm("maou_game_battle19.mp3", true);
+        boolean isBoss = false;
+        for (ICombatant e : enemies) {
+            if ("demon_king".equals(e.getTextureKey()) || "Demon King".equals(e.getName())) {
+                isBoss = true;
+                break;
+            }
+        }
+
+        if (isBoss) {
+            game.getAudioManager().playBgm("maou_game_lastboss04.mp3", true);
+        } else {
+            game.getAudioManager().playBgm("maou_game_battle19.mp3", true);
+        }
 
         combatManager.startBattle(this.party, this.enemies, gameState);
 
@@ -322,7 +416,12 @@ public class VisualCombatScreen implements Screen {
             CharacterAnimator animator = new CharacterAnimator(
                     idleFrames, baseX, baseY, CHAR_SIZE, CHAR_SIZE);
 
-            animator.setScale(scale);
+            // Special scaling for Boss
+            if ("demon_king".equals(type)) {
+                animator.setScale(3.0f); // 3x scale for Demon King
+            } else {
+                animator.setScale(scale);
+            }
 
             // リサイズ用に比率を保存
             animator.setPositionRatios(startXRatio, startYRatio, i);
@@ -379,12 +478,38 @@ public class VisualCombatScreen implements Screen {
             return;
         }
 
+        // Lucky Time Logic
+        if (isLuckyTimeActive) {
+            updateLuckyTime(delta);
+            drawLuckyTime();
+            return; // Skip normal update while lucky time is showing
+        }
+
         if (combatManager.isBattleActive()) {
             turnDelay += delta;
+            // Check for Lucky Time Trigger every 3 turns (approx, logic needs refine)
+            // Better: Check at start of new turn before prepareTurn.
+            // Using a simple turn counter in render might be sporadic.
+            // Ideally trigger it when turnDelay is finished, BEFORE prepareTurn.
             if (turnDelay >= TURN_DURATION) {
+
+                // Trigger Lucky Time? (Once every 3 moves for demonstration logic)
+                totalTurnCounter++;
+                // "Sometimes" -> 1/3 ~ 1/4 turns. Let's use % 4 == 0.
+                if (totalTurnCounter % 4 == 0) {
+                    startLuckyTime();
+                    turnDelay = 0; // consumed by lucky time start
+                    return; // Wait for next loop
+                }
+
                 turnDelay = 0;
                 prepareTurn();
             }
+        }
+
+        stateTime += delta;
+        for (CharacterAnimator animator : animatorMap.values()) {
+            animator.update(delta);
         }
     }
 
@@ -430,16 +555,16 @@ public class VisualCombatScreen implements Screen {
                 floatingTextManager.add(popupX, popupY, String.valueOf(damage), Color.RED);
             }
             // ---------------------------------
-            
+
             // 死亡判定とクエスト通知
             if (!target.isAlive()) {
                 addLog(target.getName() + " is defeated!");
                 if (game.getGameState() != null && game.getGameState().questManager != null) {
                     // IDや種別判定があればベストだが、名前で判定する
                     // "KILL_" + Name
-                    String condition = "KILL_" + target.getName(); 
+                    String condition = "KILL_" + target.getName();
                     System.out.println("Quest Condition Trigger: " + condition);
-                game.getGameState().questManager.checkProgress(condition);
+                    game.getGameState().questManager.checkProgress(condition);
                 }
             }
         }
@@ -468,12 +593,20 @@ public class VisualCombatScreen implements Screen {
         floatingTextManager.draw(batch, font);
 
         // リザルト
+        // リザルト
         if (!combatManager.isBattleActive()) {
             drawBattleResult();
 
-            // クリックで戻る
-            if (Gdx.input.justTouched()) {
-                endBattle();
+            // Click handling
+            // If VICTORY, allow click to end battle
+            if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+                if (Gdx.input.justTouched()) {
+                    endBattle();
+                }
+            }
+            // If DEFEAT, do NOT allow exit (Stay in battle screen as requested)
+            else if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+                // Do nothing, effectively trapping the user
             }
         }
 
@@ -488,6 +621,22 @@ public class VisualCombatScreen implements Screen {
     }
 
     private void endBattle() {
+        // Check if Demon King was defeated
+        boolean isBossBattle = false;
+        for (ICombatant e : enemies) {
+            if ("demon_king".equals(e.getTextureKey())) {
+                isBossBattle = true;
+                break;
+            }
+        }
+
+        if (isBossBattle
+                && combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+            if (game.getGameState() != null) {
+                game.getGameState().setFlag("BOSS_DEFEATED", 1);
+            }
+        }
+
         // バトルフラグを降ろす
         if (game != null) {
             game.battleflag = 0;
@@ -592,8 +741,18 @@ public class VisualCombatScreen implements Screen {
 
     private void drawBattleResult() {
         font.getData().setScale(3.0f);
-        font.setColor(Color.GOLD);
-        String result = combatManager.getBattleState().toString();
+
+        com.teamname.world.combat.CombatManager.BattleState state = combatManager.getBattleState();
+        String result = state.toString();
+
+        if (state == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+            font.setColor(Color.RED);
+            result = "GAME OVER";
+        } else {
+            font.setColor(Color.GOLD);
+            result = "VICTORY";
+        }
+
         GlyphLayout layout = new GlyphLayout(font, result);
         font.draw(batch, result, (Gdx.graphics.getWidth() - layout.width) / 2, Gdx.graphics.getHeight() / 2);
         font.getData().setScale(1.5f);

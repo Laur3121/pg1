@@ -99,6 +99,9 @@ public class CombatManager {
             return;
         }
 
+        // Reset multiplier
+        damageMultiplier = 1.0f;
+
         // 次の行動者を取得
         currentActor = turnOrder.getNext();
 
@@ -167,6 +170,12 @@ public class CombatManager {
         }
     }
 
+    private float damageMultiplier = 1.0f;
+
+    public void setDamageMultiplier(float multiplier) {
+        this.damageMultiplier = multiplier;
+    }
+
     /**
      * 通常攻撃を実行
      * 
@@ -181,11 +190,15 @@ public class CombatManager {
 
         ICombatant target = targets.get(0);
 
-        // ダメージ計算(簡易版)
-        int damage = Math.max(1, actor.getPower() - target.getBlock());
+        // ダメージ計算(簡易版) + Multiplier
+        int baseDamage = Math.max(1, actor.getPower() - target.getBlock());
+        int damage = (int) (baseDamage * damageMultiplier);
 
         target.takeDamage(damage);
         // System.out.println(target.getName() + ":" + damage + " dameges");
+        if (damageMultiplier > 1.0f) {
+            System.out.println("[LUCKY TIME ACTIVE] Damage Multiplied! Def: " + baseDamage + " -> " + damage);
+        }
 
         if (!target.isAlive()) {
             // System.out.println(target.getName() + " is dead");

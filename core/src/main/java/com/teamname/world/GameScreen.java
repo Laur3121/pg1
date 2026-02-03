@@ -188,7 +188,8 @@ public class GameScreen implements Screen {
         // 王様のアセットパス (160x160 -> assumes top-left is 32x32 frame)
         String kingPath = "king/pixelartKing.png";
         // New Event System Usage: Trigger "king_intro" dialog
-        NPCEntity king = new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 500, "King", "DIALOG_king_intro", game, true, kingPath, 99, 99);
+        NPCEntity king = new NPCEntity(mapPixelWidth / 2f, mapPixelHeight / 2f - 500, "King", "DIALOG_king_intro", game,
+                true, kingPath, 99, 99);
         npcs.add(king);
 
         // ボス配置 (最初は隠れているか、条件付きで処理するか)
@@ -204,7 +205,8 @@ public class GameScreen implements Screen {
 
         // ボス用の強力な敵データ設定
         List<com.teamname.world.combat.ICombatant> bossParty = new ArrayList<>();
-        bossParty.add(new com.teamname.world.combat.Monster("Demon King", 1000, 80, 40, 30, 500, 5000));
+        // Level 999 - No limits!
+        bossParty.add(new com.teamname.world.combat.DemonKing(999));
         boss.setEnemies(bossParty);
     }
 
@@ -251,15 +253,19 @@ public class GameScreen implements Screen {
             boss.update(delta);
             if (player.getBounds().overlaps(boss.getBounds())) {
                 game.getUIManager().showBattleUI(boss.getEnemies());
-                // ボス戦後は...フラグを変えるか、ここでは単純に消す（復活しない）
-                game.getGameState().setFlag("BOSS_DEFEATED", 1);
-                // ボスを画面外へ飛ばすなどで消滅扱いにする簡易実装
-                boss.setPosition(-9999, -9999);
+                // Remove premature flag setting. Flag will be set in VisualCombatScreen upon
+                // victory.
+                // game.getGameState().setFlag("BOSS_DEFEATED", 1);
 
-                // Show Game Clear
-                if (gameClearLabel != null) {
-                    gameClearLabel.setVisible(true);
-                }
+                // Move boss away temporarily to avoid immediate re-trigger if logic allows,
+                // but since we change screens, it might be fine.
+                // However, without the flag, it might re-trigger in update loop if we don't
+                // handle it.
+                // But changing screen stops GameScreen.update usually?
+                // Actually VisualCombatScreen is just an overlay or separate screen?
+                // AdventureRPG.render calls current screen.
+                // UIManager.showBattleUI sets battleflag=1.
+                // GameScreen.render checks battleflag.
             }
         }
 
@@ -274,7 +280,7 @@ public class GameScreen implements Screen {
                 }
             }
         }
-        
+
         // カメラ位置をプレイヤーに追従させる
         worldCamera.position.x = player.getX() + player.getWidth() / 2f;
         worldCamera.position.y = player.getY() + player.getHeight() / 2f;
@@ -332,7 +338,7 @@ public class GameScreen implements Screen {
                 isBossQuestActive = true;
             }
         }
-        
+
         if (isBossQuestActive && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
             boss.render(batch);
         }
