@@ -69,7 +69,7 @@ public class UIManager {
         if (!shopUI.isVisible())
             shopUI.show();
     }
-    
+
     public void toggleQuestLog() {
         questLogUI.toggle();
     }
@@ -82,8 +82,10 @@ public class UIManager {
     public void showDialog(String name, String text) {
         dialogUI.showDialog(name, text);
     }
-    
-    public void showDialogWithOptions(String name, String text, java.util.List<com.teamname.world.system.event.DialogOption> options, com.teamname.world.system.event.EventManager eventManager) {
+
+    public void showDialogWithOptions(String name, String text,
+            java.util.List<com.teamname.world.system.event.DialogOption> options,
+            com.teamname.world.system.event.EventManager eventManager) {
         dialogUI.showDialogWithOptions(name, text, options, eventManager);
     }
 
@@ -95,7 +97,7 @@ public class UIManager {
     // --- 戦闘関連 ---
     public void showBattleUI(int enemyId) {
         // 敵生成
-        java.util.List<com.teamname.world.combat.ICombatant> enemies = new java.util.ArrayList<>();
+        java.util.List<com.teamname.world.combat.core.ICombatant> enemies = new java.util.ArrayList<>();
         // とりあえずIDに関わらず固定の敵セット
         enemies.add(new com.teamname.world.combat.Monster("Evil Mage", 80, 18, 8, 14, 50, 100));
         enemies.add(new com.teamname.world.combat.Monster("Archer", 60, 16, 5, 16, 40, 80));
@@ -103,9 +105,9 @@ public class UIManager {
         showBattleUI(enemies);
     }
 
-    public void showBattleUI(java.util.List<com.teamname.world.combat.ICombatant> enemies) {
+    public void showBattleUI(java.util.List<com.teamname.world.combat.core.ICombatant> enemies) {
         // パーティ取得
-        java.util.List<com.teamname.world.combat.ICombatant> party = new java.util.ArrayList<>();
+        java.util.List<com.teamname.world.combat.core.ICombatant> party = new java.util.ArrayList<>();
         if (game.getGameState() != null && game.getGameState().partyMembers != null) {
             party.addAll(game.getGameState().partyMembers);
         }
@@ -163,6 +165,9 @@ public class UIManager {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
             toggleQuestLog();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            showShop();
         }
 
         // 各UIの描画 (順序注意: 後に描くほうが手前)

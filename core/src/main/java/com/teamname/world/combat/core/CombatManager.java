@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.teamname.world.system.GameState;
 import com.teamname.world.system.Character;
+import com.teamname.world.combat.Monster;
 
 /**
  * 戦闘全体を管理するメインクラス

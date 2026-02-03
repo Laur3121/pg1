@@ -1,5 +1,7 @@
 package com.teamname.world.combat;
 
+import com.teamname.world.combat.core.ICombatant;
+
 public class Monster implements ICombatant {
     private String name;
     private int maxHp;

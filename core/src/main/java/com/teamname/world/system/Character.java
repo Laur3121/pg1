@@ -1,6 +1,6 @@
 package com.teamname.world.system;
 
-import com.teamname.world.combat.ICombatant;
+import com.teamname.world.combat.core.ICombatant;
 
 public class Character implements ICombatant {
     public String name;

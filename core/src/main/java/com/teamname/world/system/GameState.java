@@ -11,10 +11,12 @@ public class GameState {
     // ゲーム進行フラグ（マップで管理）
     public java.util.Map<String, Integer> flags;
 
-        // Managers
+    // Boss battle flag
+    public boolean isBossBattle = false;
+
+    // Managers
     public com.teamname.world.system.quest.QuestManager questManager;
     public com.teamname.world.system.event.EventManager eventManager;
-
 
     public GameState() {
         this.partyMembers = new java.util.ArrayList<>();
@@ -25,7 +27,7 @@ public class GameState {
         // 後で initialize(DataLoader) を呼び出す形か、ここで生成
         this.questManager = new com.teamname.world.system.quest.QuestManager();
         // EventManagerはGameInitializerで生成してセットされる
-    }   
+    }
 
     public void setFlag(String key, int value) {
         flags.put(key, value);

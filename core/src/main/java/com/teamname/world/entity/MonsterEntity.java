@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.teamname.world.combat.ICombatant;
+import com.teamname.world.combat.core.ICombatant;
 import com.teamname.world.combat.Monster;
 
 import java.util.ArrayList;

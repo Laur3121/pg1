@@ -1,4 +1,4 @@
-package com.teamname.world.combat.ui;
+package com.teamname.world.combat;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion; // Added import
+import com.badlogic.gdx.audio.Music; // Added for BGM
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -81,7 +82,7 @@ public class VisualCombatScreen implements Screen {
     private void startLuckyTime() {
         isLuckyTimeActive = true;
         luckyTimer = 0;
-        isLuckyJackpot = Math.random() < 0.33; // 1/3 Chance
+        isLuckyJackpot = Math.random() < 0.5; // 1/3 Chance
         addLog(">>> LUCKY TIME CHANCE! <<<");
     }
 
@@ -106,26 +107,55 @@ public class VisualCombatScreen implements Screen {
                 }
             }
 
+            // Play Music once if Jackpot
+            if (isLuckyJackpot && luckyTimer > 2.0f && luckyTimer < 2.1f) {
+                if (pachinkoMusic != null && !pachinkoMusic.isPlaying()) {
+                    if (battleMusic != null && battleMusic.isPlaying())
+                        battleMusic.pause();
+                    if (bossMusic != null && bossMusic.isPlaying())
+                        bossMusic.pause();
+                    pachinkoMusic.play();
+                }
+            }
+
             // Wait 1.5s then finish
             if (luckyTimer > 3.5f) {
                 isLuckyTimeActive = false;
                 if (isLuckyJackpot) {
-                    combatManager.setDamageMultiplier(100000.0f);
-                    addLog("JACKPOT! 777! Damage x100000!");
+                    combatManager.setDamageMultiplier(10000000.0f);
+                    addLog("JACKPOT! 777! Damage x10000000!");
                 } else {
                     addLog("Miss... Normal Damage.");
                 }
+
+                // Restore BGM
+                if (bossMusic != null && !bossMusic.isPlaying() && game.getGameState().isBossBattle)
+                    bossMusic.play();
+                else if (battleMusic != null && !battleMusic.isPlaying() && !game.getGameState().isBossBattle)
+                    battleMusic.play();
+
                 prepareTurn();
             }
         }
     }
 
     private void drawLuckyTime() {
-        // Yellow Flashing Background
-        float alpha = (Math.sin(luckyTimer * 20) > 0) ? 0.5f : 0.2f;
+        // Rainbow Strobe Background
+        float t = luckyTimer * 5.0f; // Speed
+        float r = (float) (Math.sin(t) + 1) / 2f;
+        float g = (float) (Math.sin(t + 2) + 1) / 2f;
+        float b = (float) (Math.sin(t + 4) + 1) / 2f;
+        float alpha = (Math.sin(luckyTimer * 20) > 0) ? 0.6f : 0.3f; // Flash intensity
+
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(1f, 1f, 0f, alpha);
+
+        if (isLuckyJackpot) {
+            shapeRenderer.setColor(r, g, b, alpha); // Rainbow for Jackpot
+        } else {
+            shapeRenderer.setColor(1f, 1f, 0f, alpha); // Yellow for Chance
+        }
+
         shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         shapeRenderer.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
@@ -154,6 +184,10 @@ public class VisualCombatScreen implements Screen {
     // --- デバッグUI ---
     private Stage uiStage;
     private Skin skin;
+
+    private Music battleMusic;
+    private Music bossMusic;
+    private Music pachinkoMusic; // Added for Jackpot
 
     public VisualCombatScreen(com.teamname.world.AdventureRPG game) {
         this.game = game;
@@ -254,13 +288,8 @@ public class VisualCombatScreen implements Screen {
 
     private void loadAssets() {
         // 味方 (Warrior)
-<<<<<<< HEAD:core/src/main/java/com/teamname/world/combat/ui/VisualCombatScreen.java
-        loadTextureSafe("warrior_idle", "face/fuji.png");
-=======
         // Idle (1.png - 4.png)
         loadTextureSequence("warrior_idle", "evil Mage Pack/warriar/idle/", 4);
-
->>>>>>> main:core/src/main/java/com/teamname/world/combat/VisualCombatScreen.java
         loadTextureSafe("warrior_attack1", "evil Mage Pack/warriar/tile000.png");
         loadTextureSafe("warrior_attack2", "evil Mage Pack/warriar/tile001.png");
         loadTextureSafe("warrior_attack3", "evil Mage Pack/warriar/tile002.png");
@@ -506,7 +535,7 @@ public class VisualCombatScreen implements Screen {
                 // Trigger Lucky Time? (Once every 3 moves for demonstration logic)
                 totalTurnCounter++;
                 // "Sometimes" -> 1/3 ~ 1/4 turns. Let's use % 4 == 0.
-                if (totalTurnCounter % 4 == 0) {
+                if (totalTurnCounter % 1 == 0) {
                     startLuckyTime();
                     turnDelay = 0; // consumed by lucky time start
                     return; // Wait for next loop
@@ -609,13 +638,13 @@ public class VisualCombatScreen implements Screen {
 
             // Click handling
             // If VICTORY, allow click to end battle
-            if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+            if (combatManager.getBattleState() == CombatManager.BattleState.VICTORY) {
                 if (Gdx.input.justTouched()) {
                     endBattle();
                 }
             }
             // If DEFEAT, do NOT allow exit (Stay in battle screen as requested)
-            else if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+            else if (combatManager.getBattleState() == CombatManager.BattleState.DEFEAT) {
                 // Do nothing, effectively trapping the user
             }
         }
@@ -641,7 +670,7 @@ public class VisualCombatScreen implements Screen {
         }
 
         if (isBossBattle
-                && combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+                && combatManager.getBattleState() == CombatManager.BattleState.VICTORY) {
             if (game.getGameState() != null) {
                 game.getGameState().setFlag("BOSS_DEFEATED", 1);
             }
@@ -752,10 +781,10 @@ public class VisualCombatScreen implements Screen {
     private void drawBattleResult() {
         font.getData().setScale(3.0f);
 
-        com.teamname.world.combat.CombatManager.BattleState state = combatManager.getBattleState();
+        CombatManager.BattleState state = combatManager.getBattleState();
         String result = state.toString();
 
-        if (state == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+        if (state == CombatManager.BattleState.DEFEAT) {
             font.setColor(Color.RED);
             result = "GAME OVER";
         } else {

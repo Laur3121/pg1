@@ -78,7 +78,7 @@ public class GameScreen implements Screen {
     private BitmapFont gameClearFont;
 
     // Added Field
-    private Label levelLabel;
+    // private Label levelLabel; // Removed
 
     public GameScreen(AdventureRPG game) {
         this.game = game;
@@ -146,11 +146,7 @@ public class GameScreen implements Screen {
         gameClearLabel.setVisible(false);
         uiTable.add(gameClearLabel).center();
 
-        // Level Label (Top-Left)
-        Label.LabelStyle levelStyle = new Label.LabelStyle(gameClearFont, Color.WHITE);
-        levelLabel = new Label("Lv.1", levelStyle);
-        levelLabel.setPosition(20, Gdx.graphics.getHeight() - 50);
-        stage.addActor(levelLabel);
+        // Level Label removed
 
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
@@ -204,7 +200,7 @@ public class GameScreen implements Screen {
         boss.setSpeed(0);
 
         // ボス用の強力な敵データ設定
-        List<com.teamname.world.combat.ICombatant> bossParty = new ArrayList<>();
+        List<com.teamname.world.combat.core.ICombatant> bossParty = new ArrayList<>();
         // Level 999 - No limits!
         bossParty.add(new com.teamname.world.combat.DemonKing(999));
         boss.setEnemies(bossParty);
@@ -379,16 +375,10 @@ public class GameScreen implements Screen {
             game.getUIManager().updateAndRender(delta);
         }
 
-        // Update Level Label
-        com.teamname.world.system.Character leader = game.getGameState().getLeader();
-        if (leader != null && levelLabel != null) {
-            levelLabel.setText(leader.getName() + " Lv." + leader.getLevel());
-            // levelLabel.setPosition(20, Gdx.graphics.getHeight() - 50); // Optional update
-            // if needed
-        } // new one.
-          // Actually, UIManager usually handles all UI. But requested to add to Field
-          // Screen specifically.
-          // Let's use `gameClearFont` scaled down if no other font.
+        // Update Level Label removed
+        // Actually, UIManager usually handles all UI. But requested to add to Field
+        // Screen specifically.
+        // Let's use `gameClearFont` scaled down if no other font.
     }
 
     @Override
