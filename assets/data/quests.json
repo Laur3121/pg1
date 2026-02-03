@@ -12,8 +12,8 @@
         "rewardExp": 50
       },
       {
-        "condition": "KILL_Evil Mage",
-        "description": "魔王(Evil Mage)を倒す。",
+        "condition": "KILL_Demon King",
+        "description": "魔王(Demon King)を倒す。",
         "nextStepIndex": -1,
         "rewardGold": 5000,
         "rewardExp": 10000

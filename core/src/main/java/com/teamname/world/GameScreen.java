@@ -223,8 +223,17 @@ public class GameScreen implements Screen {
             }
         }
 
-        // ボス更新 (フラグがある場合のみ)
-        if (game.getGameState().getFlag("MISSION_ACCEPTED") == 1 && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
+        // ボス更新 (クエストを受注している場合のみ)
+        // クエストID:1がアクティブであればボスを表示
+        boolean isBossQuestActive = false;
+        if (game.getGameState().questManager != null) {
+            // Quest ID 1 = King's Request
+            if (game.getGameState().questManager.getActiveQuests().containsKey(1)) {
+                isBossQuestActive = true;
+            }
+        }
+
+        if (isBossQuestActive && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
             boss.update(delta);
             if (player.getBounds().overlaps(boss.getBounds())) {
                 game.getUIManager().showBattleUI(boss.getEnemies());
@@ -302,7 +311,15 @@ public class GameScreen implements Screen {
         }
 
         // ボス描画
-        if (game.getGameState().getFlag("MISSION_ACCEPTED") == 1 && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
+        // クエストID:1がアクティブであればボスを表示
+        boolean isBossQuestActive = false;
+        if (game.getGameState().questManager != null) {
+            if (game.getGameState().questManager.getActiveQuests().containsKey(1)) {
+                isBossQuestActive = true;
+            }
+        }
+        
+        if (isBossQuestActive && game.getGameState().getFlag("BOSS_DEFEATED") == 0) {
             boss.render(batch);
         }
         player.render(batch);

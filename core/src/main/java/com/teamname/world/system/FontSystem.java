@@ -40,7 +40,6 @@ public class FontSystem {
         parameter.borderWidth = 1;
 
         // 収録する文字セット（日本語を含む）
-        // 収録する文字セット（日本語を含む）
         parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS +
                 "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん" +
                 "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン" +
