@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Fireball",
+    "description": "Deals fire damage to one enemy.",
+    "mpCost": 5,
+    "power": 20,
+    "targetType": "SINGLE",
+    "animationId": "fireball_effect"
+  },
+  {
+    "id": 2,
+    "name": "Heal",
+    "description": "Restores HP.",
+    "mpCost": 3,
+    "power": 25,
+    "targetType": "SINGLE",
+    "animationId": "heal_effect"
+  }
+]

@@ -2,13 +2,18 @@ package com.teamname.world.system;
 
 import com.badlogic.gdx.Gdx;
 import com.teamname.world.AdventureRPG;
+import com.teamname.world.GameScreen; // 追加
 import com.teamname.world.TitleScreen;
-import com.teamname.world.combat.ui.VisualCombatScreen;
+import com.teamname.world.combat.VisualCombatScreen;
+import com.teamname.world.system.UIManager;
+
+import com.teamname.world.system.Character; // For party creation
 
 public class GameInitializer {
     /**
      * ニューゲーム時（セーブデータがない時）に、初期アイテムをインベントリに追加します。
-     * @param inventory 空のインベントリ
+     * 
+     * @param inventory  空のインベントリ
      * @param dataLoader アイテムデータの参照元
      */
     public static void setupNewGameInventory(Inventory inventory, DataLoader dataLoader) {
@@ -44,33 +49,96 @@ public class GameInitializer {
         }
         game.setDataLoader(dataLoader);
 
-        // 2. まずは空っぽの状態で初期化
-        Inventory inventory = new Inventory(); // 中身なし
+        // 2. 仮のGameStateとInventoryを作成（UI初期化でのNPE防止のため）
+        game.setInventory(new Inventory());
+        game.setGameState(new GameState());
+
+        // 3. UIマネージャーの初期化
+        game.setUIManager(new UIManager(game));
+
+        // 3. 戦闘画面の初期化
+        game.combatScreen = new VisualCombatScreen(game);
+
+        // 4. オーディオマネージャーの初期化
+        game.setAudioManager(new AudioManager());
+
+        // 5. EventManagerの初期化
+        com.teamname.world.system.event.EventManager eventManager = new com.teamname.world.system.event.EventManager(
+                game);
+        // dataLoaderからdialogDataを取得して渡す
+        eventManager.initialize(game.getGameState(), game.getUIManager(), dataLoader.dialogData);
+        game.getGameState().eventManager = eventManager;
+
+        // QuestManagerの初期化 (GameState内でnewされているが、DataLoaderを渡す必要がある)
+        if (game.getGameState().questManager != null) {
+            game.getGameState().questManager.initialize(dataLoader);
+        }
+
+        // 6. タイトル画面へ (ここではまだゲームデータはロードしない)
+        game.setScreen(new TitleScreen(game));
+    }
+
+    /**
+     * ゲーム本編を開始する（タイトル画面から呼ばれる）
+     * 
+     * @param game    ゲームインスタンス
+     * @param isDebug デバッグモードならTrue
+     */
+    public static void startGame(AdventureRPG game, boolean isDebug) {
+        // GameStateとInventoryを初期化
+        Inventory inventory = new Inventory();
         game.setInventory(inventory);
 
-        game.setGameState(new GameState()); // HP:50, Gold:100 (デフォルト)
+        GameState newState = new GameState();
+        game.setGameState(newState);
 
-        // 3. セーブデータがあるかチェックして分岐
-        if (Gdx.files.local("save.json").exists()) {
+        // 必須: EventManagerの初期化 (以前のGameStateのものは破棄されているため再生成)
+        com.teamname.world.system.event.EventManager eventManager = new com.teamname.world.system.event.EventManager(
+                game);
+        // DataLoaderは game.getDataLoader() から取得
+        eventManager.initialize(newState, game.getUIManager(), game.getDataLoader().dialogData);
+        newState.eventManager = eventManager;
+
+        // QuestManagerの初期化
+        if (newState.questManager != null) {
+            newState.questManager.initialize(game.getDataLoader());
+        }
+
+        if (!isDebug && Gdx.files.local("data/save.dat").exists()) {
             // --- 続きから ---
             System.out.println("セーブデータを発見。ロードします...");
-            // SaveManagerを使って、GameState(HPなど) と Inventory(アイテム) を一気にロード
             SaveManager.loadGame(game);
-
         } else {
-            // --- はじめから ---
-            System.out.println("セーブデータなし。ニューゲームを開始します。");
-            // 自分自身（GameInitializer）のメソッドを呼び出して初期アイテムを配る
+            // --- はじめから（またはデバッグ開始） ---
+            System.out.println("ニューゲーム(Debug: " + isDebug + ") を開始します。");
+
+            // 4人パーティ作成
+            Character hero = new Character("Hero", 100, 30, 15, 10);
+            hero.setDataLoaderProvider(game);
+            newState.addMember(hero);
+
+            Character warrior = new Character("Warrior", 120, 10, 20, 15);
+            warrior.setDataLoaderProvider(game);
+            newState.addMember(warrior);
+
+            Character mage = new Character("Mage", 60, 50, 5, 5);
+            mage.setDataLoaderProvider(game);
+            newState.addMember(mage);
+
+            Character priest = new Character("Priest", 70, 40, 8, 8);
+            priest.setDataLoaderProvider(game);
+            newState.addMember(priest);
+
+            // Debugなら所持金ボーナス
+            if (isDebug) {
+                newState.gold = 5000;
+            }
+
+            // 初期アイテム配布
             setupNewGameInventory(game.getInventory(), game.getDataLoader());
         }
 
-        // 4. メニュータブの初期化
-        game.setMenuTab(new MenuTab(game));
-
-        // 5. 戦闘画面の初期化
-        game.combatScreen = new VisualCombatScreen();
-
-        // 6. タイトル画面へ
-        game.setScreen(new TitleScreen(game));
+        // ゲーム画面へ遷移
+        game.setScreen(new GameScreen(game));
     }
 }

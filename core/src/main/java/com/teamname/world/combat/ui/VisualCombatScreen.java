@@ -9,8 +9,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion; // Added import
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import com.teamname.world.combat.core.CombatManager;
 import com.teamname.world.combat.core.ICombatant;
@@ -35,9 +44,7 @@ public class VisualCombatScreen implements Screen {
     private static final float TURN_DURATION = 3.0f;
     private static final int MAX_LOG_LINES = 8;
     private static final float CHAR_SIZE = 80f;
-    private static final float PARTY_START_X = 100f;
-    private static final float ENEMY_START_X_OFFSET = 250f;
-    private static final float Y_START = 300f;
+
     private static final float Y_OFFSET = 120f;
     private static final float HP_BAR_HEIGHT = 10f;
     private static final float HP_BAR_OFFSET = 15f;
@@ -54,8 +61,9 @@ public class VisualCombatScreen implements Screen {
     private final List<String> combatLog;
 
     // --- マネージャー/ヘルパー ---
-    private final Map<String, Texture> textureMap;
-    private final Map<String, CharacterAnimator> animatorMap;
+    private Map<String, TextureRegion[]> textureMap = new HashMap<>();
+    private Map<String, CharacterAnimator> animatorMap = new HashMap<>();
+    private Map<String, Texture> rawTextures = new HashMap<>(); // 生のTextureを保持してdispose用
     private final CutInManager cutInManager;
     private final FloatingTextManager floatingTextManager; // ダメージポップアップ管理
 
@@ -63,15 +71,100 @@ public class VisualCombatScreen implements Screen {
     private float stateTime;
     private float turnDelay;
 
-    public VisualCombatScreen() {
+    // Lucky Time Fields
+    private boolean isLuckyTimeActive = false;
+    private float luckyTimer = 0;
+    private int[] luckySlots = new int[3];
+    private boolean isLuckyJackpot = false;
+    private int totalTurnCounter = 0;
+
+    private void startLuckyTime() {
+        isLuckyTimeActive = true;
+        luckyTimer = 0;
+        isLuckyJackpot = Math.random() < 0.33; // 1/3 Chance
+        addLog(">>> LUCKY TIME CHANCE! <<<");
+    }
+
+    private void updateLuckyTime(float delta) {
+        luckyTimer += delta;
+
+        // Slot Animation (Randomize numbers)
+        if (luckyTimer < 2.0f) {
+            for (int i = 0; i < 3; i++)
+                luckySlots[i] = (int) (Math.random() * 9) + 1;
+        } else {
+            // Result
+            if (isLuckyJackpot) {
+                luckySlots[0] = 7;
+                luckySlots[1] = 7;
+                luckySlots[2] = 7;
+            } else {
+                // Force mismatch if needed, or just leave random (small chance of random match,
+                // ok)
+                if (luckySlots[0] == luckySlots[1] && luckySlots[1] == luckySlots[2]) {
+                    luckySlots[2] = (luckySlots[2] % 9) + 1;
+                }
+            }
+
+            // Wait 1.5s then finish
+            if (luckyTimer > 3.5f) {
+                isLuckyTimeActive = false;
+                if (isLuckyJackpot) {
+                    combatManager.setDamageMultiplier(100000.0f);
+                    addLog("JACKPOT! 777! Damage x100000!");
+                } else {
+                    addLog("Miss... Normal Damage.");
+                }
+                prepareTurn();
+            }
+        }
+    }
+
+    private void drawLuckyTime() {
+        // Yellow Flashing Background
+        float alpha = (Math.sin(luckyTimer * 20) > 0) ? 0.5f : 0.2f;
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(1f, 1f, 0f, alpha);
+        shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+        // Draw Slots
+        batch.begin();
+        font.getData().setScale(5.0f);
+        font.setColor(Color.RED);
+        String slotText = luckySlots[0] + " " + luckySlots[1] + " " + luckySlots[2];
+        GlyphLayout layout = new GlyphLayout(font, slotText);
+        font.draw(batch, slotText, (Gdx.graphics.getWidth() - layout.width) / 2, Gdx.graphics.getHeight() / 2);
+
+        font.getData().setScale(2.0f);
+        font.setColor(Color.WHITE);
+        String title = "LUCKY TIME!!";
+        GlyphLayout titleLayout = new GlyphLayout(font, title);
+        font.draw(batch, title, (Gdx.graphics.getWidth() - titleLayout.width) / 2, Gdx.graphics.getHeight() / 2 + 100);
+
+        font.getData().setScale(1.5f);
+        batch.end();
+    }
+
+    // ゲーム本体への参照（画面切り替え用）
+    private final com.teamname.world.AdventureRPG game;
+
+    // --- デバッグUI ---
+    private Stage uiStage;
+    private Skin skin;
+
+    public VisualCombatScreen(com.teamname.world.AdventureRPG game) {
+        this.game = game;
         this.batch = new SpriteBatch();
         this.font = new BitmapFont();
         this.font.setColor(Color.WHITE);
         this.font.getData().setScale(1.5f);
         this.shapeRenderer = new ShapeRenderer();
 
-        this.textureMap = new HashMap<>();
-        this.animatorMap = new HashMap<>();
+        // this.textureMap = new HashMap<>(); // Replaced by new declaration
+        // this.animatorMap = new HashMap<>(); // Replaced by new declaration
         this.combatLog = new ArrayList<>();
 
         this.cutInManager = new CutInManager();
@@ -81,17 +174,93 @@ public class VisualCombatScreen implements Screen {
         this.stateTime = 0;
         this.turnDelay = 0;
 
+        // デバッグUIの初期化
+        uiStage = new Stage(new ScreenViewport());
+        skin = new Skin();
+        createBasicSkin();
+
+        TextButton winBtn = new TextButton("Debug: Win", skin);
+        winBtn.setPosition(10, Gdx.graphics.getHeight() - 60);
+        winBtn.setSize(120, 40);
+        winBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // 強制勝利
+                forceEndBattle(CombatManager.BattleState.VICTORY);
+            }
+        });
+
+        TextButton loseBtn = new TextButton("Debug: Lose", skin);
+        loseBtn.setPosition(140, Gdx.graphics.getHeight() - 60);
+        loseBtn.setSize(120, 40);
+        loseBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // 強制敗北
+                forceEndBattle(CombatManager.BattleState.DEFEAT);
+            }
+        });
+
+        uiStage.addActor(winBtn);
+        uiStage.addActor(loseBtn);
+
         loadAssets();
-        initializeBattle();
+    }
+
+    private void forceEndBattle(CombatManager.BattleState state) {
+        // CombatManagerの状態を強制変更して戦闘終了処理へ
+        // 本来はCombatManagerにメソッドを作るべきだが、簡易的に
+        // ここではBattleStateを変更できない（CombatManagerの所有物）ので
+        // CombatManagerにforceFinishを追加するか、あるいは…
+        // ここで直接結果を描画するフラグを立てる手もあるが、
+        // 次のrender呼び出しでManagerの状態が変わっていないとループする可能性がある。
+        // なのでManagerにメソッドを追加するのが正しい。
+        combatManager.forceFinish(state);
+    }
+
+    private void createBasicSkin() {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        skin.add("white", texture);
+
+        skin.add("default", this.font); // 既存のフォントを使用
+
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle.font = this.font;
+        labelStyle.fontColor = Color.WHITE;
+        skin.add("default", labelStyle);
+
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.font = this.font;
+        textButtonStyle.up = skin.newDrawable("white", Color.GRAY); // 通常時: 灰色
+        textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY); // 押下時: 濃い灰色
+        textButtonStyle.over = skin.newDrawable("white", Color.LIGHT_GRAY); // ホバー時: 薄い灰色
+        textButtonStyle.fontColor = Color.WHITE;
+        skin.add("default", textButtonStyle);
+
+        Window.WindowStyle windowStyle = new Window.WindowStyle();
+        windowStyle.titleFont = this.font;
+        windowStyle.titleFontColor = Color.WHITE;
+        windowStyle.background = skin.newDrawable("white", 0.1f, 0.1f, 0.1f, 0.8f);
+        skin.add("default", windowStyle);
     }
 
     // ========================================================================
-    //  初期化・ロード処理
+    // 初期化・ロード処理
     // ========================================================================
 
     private void loadAssets() {
         // 味方 (Warrior)
+<<<<<<< HEAD:core/src/main/java/com/teamname/world/combat/ui/VisualCombatScreen.java
         loadTextureSafe("warrior_idle", "face/fuji.png");
+=======
+        // Idle (1.png - 4.png)
+        loadTextureSequence("warrior_idle", "evil Mage Pack/warriar/idle/", 4);
+
+>>>>>>> main:core/src/main/java/com/teamname/world/combat/VisualCombatScreen.java
         loadTextureSafe("warrior_attack1", "evil Mage Pack/warriar/tile000.png");
         loadTextureSafe("warrior_attack2", "evil Mage Pack/warriar/tile001.png");
         loadTextureSafe("warrior_attack3", "evil Mage Pack/warriar/tile002.png");
@@ -112,65 +281,187 @@ public class VisualCombatScreen implements Screen {
         loadTextureSafe("archer_attack2", "evil Mage Pack/archer/tile031.png");
         loadTextureSafe("archer_attack3", "evil Mage Pack/archer/tile032.png");
         loadTextureSafe("archer_walk1", "evil Mage Pack/archer/tile033.png");
+        loadTextureSafe("archer_walk1", "evil Mage Pack/archer/tile033.png");
         loadTextureSafe("archer_walk2", "evil Mage Pack/archer/tile034.png");
+
+        // フィールドモンスター (1~4)
+        for (int i = 1; i <= 4; i++) {
+            String prefix = String.valueOf(i);
+            String folder = "free-field-enemies-pixel-art-for-tower-defense/" + i + "/";
+            // 6分割して読み込む
+            loadTextureSplit(prefix + "_idle", folder + "S_Walk.png", 6, 1);
+            loadTextureSplit(prefix + "_walk1", folder + "S_Walk.png", 6, 1);
+            loadTextureSplit(prefix + "_walk2", folder + "S_Walk.png", 6, 1);
+
+            // 攻撃
+            if (i == 1) {
+                // S_Special.png もおそらく分割が必要なアニメーション。一旦6分割と仮定。
+                // 1.png かもしれないが、ファイル名確認できてないので S_Special.png を使う
+                // リストを見ると S_Special.png (1424B) なので S_Walk (1345B) と近い。分割されてそう。
+                loadTextureSplit(prefix + "_attack1", folder + "S_Special.png", 6, 1);
+            } else if (i == 2 || i == 3) {
+                loadTextureSplit(prefix + "_attack1", folder + "S_Attack.png", 6, 1);
+                loadTextureSplit(prefix + "_attack1", folder + "S_Walk.png", 6, 1);
+            }
+        }
+
+        // Demon King
+        // DeamonKing/Devil.png: 39 cols, 1 row (assumed). Using first 6 for Idle.
+        loadTextureSplit("demon_king_idle", "DeamonKing/Devil.png", 6, 1);
+        loadTextureSplit("demon_king_walk1", "DeamonKing/Devil.png", 6, 1);
+        loadTextureSplit("demon_king_attack1", "DeamonKing/Devil.png", 6, 1);
     }
 
     private void loadTextureSafe(String key, String path) {
         try {
             Texture texture = new Texture(path);
-            textureMap.put(key, texture);
+            rawTextures.put(key, texture);
+            // 1枚絵として登録 (1x1の配列)
+            textureMap.put(key, new TextureRegion[] { new TextureRegion(texture) });
         } catch (Exception e) {
             System.err.println("Warning: Failed to load " + path);
         }
     }
 
-    private void initializeBattle() {
-        party = new ArrayList<>();
-        party.add(new TestCharacter("Hero", 100, 20, 10, 15));
-        party.add(new TestCharacter("Warrior", 120, 25, 15, 10));
-
-        enemies = new ArrayList<>();
-        enemies.add(new TestCharacter("Evil Mage", 80, 18, 8, 14));
-        enemies.add(new TestCharacter("Archer", 60, 16, 5, 16));
-
-        setupAnimators(party, PARTY_START_X, "party_", "warrior");
-        setupAnimators(enemies, Gdx.graphics.getWidth() - ENEMY_START_X_OFFSET, "enemy_", null);
-
-        addLog("=== Battle Start! ===");
-        combatManager.startBattle(party, enemies);
+    private void loadTextureSplit(String key, String path, int cols, int rows) {
+        try {
+            Texture texture = new Texture(path);
+            rawTextures.put(key, texture);
+            TextureRegion[][] tmp = TextureRegion.split(texture, texture.getWidth() / cols, texture.getHeight() / rows);
+            // 1次元配列に変換
+            TextureRegion[] frames = new TextureRegion[cols * rows];
+            int index = 0;
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    frames[index++] = tmp[i][j];
+                }
+            }
+            textureMap.put(key, frames);
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to load split texture " + path);
+        }
     }
 
-    private void setupAnimators(List<ICombatant> combatants, float startX, String keyPrefix, String forceType) {
+    private void loadTextureSequence(String key, String folderPath, int count) {
+        try {
+            TextureRegion[] frames = new TextureRegion[count];
+            for (int i = 1; i <= count; i++) {
+                String path = folderPath + i + ".png";
+                Texture texture = new Texture(path);
+                // rawTexturesに保存してdispose対象にする (キーを一意にするため連番付与)
+                rawTextures.put(key + "_seq_" + i, texture);
+                frames[i - 1] = new TextureRegion(texture);
+            }
+            textureMap.put(key, frames);
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to load texture sequence for " + key + " in " + folderPath);
+            e.printStackTrace();
+        }
+    }
+
+    public void startBattle(List<ICombatant> party, List<ICombatant> enemies,
+            com.teamname.world.system.GameState gameState) {
+        System.out
+                .println("DEBUG: startBattle called. Party size: " + party.size() + ", Enemy size: " + enemies.size());
+        this.party = new ArrayList<>(party);
+        this.enemies = new ArrayList<>(enemies);
+        this.combatLog.clear();
+        this.animatorMap.clear();
+
+        // 手前左（Y座標を低く） -> 画面の幅10%, 高さ30%, スケール1.5倍
+        // プレイヤー側は "forceType" を指定せず、getTextureKey() に任せることも可能だが、
+        // 現状 Character.java が "warrior" を返すよう実装したので、forceType = null にして任せる形に変更する
+        // User Request: Heroもフィールドと同じように、戦闘画面の右下(敵の近く)で表示してください。
+        // Changing X from 0.1f to 0.6f
+        setupAnimators(this.party, 0.6f, 0.3f, 1.5f, "party_", null);
+
+        // 奥右（Y座標を高く） -> 画面の幅70%, 高さ60%, スケール0.8倍
+        setupAnimators(this.enemies, 0.7f, 0.6f, 0.8f, "enemy_", null);
+
+        addLog("=== Battle Start! ===");
+
+        // BGM再生
+        boolean isBoss = false;
+        for (ICombatant e : enemies) {
+            if ("demon_king".equals(e.getTextureKey()) || "Demon King".equals(e.getName())) {
+                isBoss = true;
+                break;
+            }
+        }
+
+        if (isBoss) {
+            game.getAudioManager().playBgm("maou_game_lastboss04.mp3", true);
+        } else {
+            game.getAudioManager().playBgm("maou_game_battle19.mp3", true);
+        }
+
+        combatManager.startBattle(this.party, this.enemies, gameState);
+
+        // 入力を受け付ける
+        Gdx.input.setInputProcessor(uiStage);
+    }
+
+    private void setupAnimators(List<ICombatant> combatants, float startXRatio, float startYRatio, float scale,
+            String keyPrefix,
+            String forceType) {
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+
         for (int i = 0; i < combatants.size(); i++) {
             String key = keyPrefix + i;
             String type = forceType;
             if (type == null) {
-                type = (i == 0) ? "evilmage" : "archer";
+                // ICombatantからキーを取得
+                type = combatants.get(i).getTextureKey();
             }
 
-            Texture idleTexture = textureMap.getOrDefault(type + "_idle", createPlaceholderTexture());
+            // シンプルに: 比率で配置
+            float baseX = width * startXRatio;
+            float baseY = height * startYRatio - i * Y_OFFSET;
+
+            TextureRegion[] idleFrames = textureMap.get(type + "_idle");
+            if (idleFrames == null)
+                idleFrames = createPlaceholderTexture();
+
             CharacterAnimator animator = new CharacterAnimator(
-                idleTexture, startX, Y_START - i * Y_OFFSET, CHAR_SIZE, CHAR_SIZE
-            );
+                    idleFrames, baseX, baseY, CHAR_SIZE, CHAR_SIZE);
 
-            addFramesToAnimator(animator, type, "attack", 3);
+            // Special scaling for Boss
+            if ("demon_king".equals(type)) {
+                animator.setScale(3.0f); // 3x scale for Demon King
+            } else {
+                animator.setScale(scale);
+            }
+
+            // リサイズ用に比率を保存
+            animator.setPositionRatios(startXRatio, startYRatio, i);
+
+            addFramesToAnimator(animator, type, "attack", 3); // 既存メソッドの中身も変える必要あり
             addFramesToAnimator(animator, type, "walk", 2);
-
             animatorMap.put(key, animator);
         }
     }
 
-    private void addFramesToAnimator(CharacterAnimator animator, String charPrefix, String actionType, int count) {
-        for (int j = 1; j <= count; j++) {
-            String texKey = charPrefix + "_" + actionType + j;
-            if (textureMap.containsKey(texKey)) {
-                animator.addFrame(actionType, textureMap.get(texKey));
+    private void addFramesToAnimator(CharacterAnimator animator, String type, String motionType, int count) {
+        // 先に textureMap から配列を取得して一括追加する形に変更
+        // キー生成: type + "_" + motionType + "1" とかではなく、type + "_" + motionTypeX を登録済みと仮定
+        // しかし loadTextureSafe/Split で登録したのは "warrior_walk1", "warrior_walk2" のように連番
+
+        // 既存のassets (warrior/evilmage) は 連番キーで登録されている: key_1, key_2...
+        // 新規のassets (1~4) も: key_walk1, key_walk2... (中身は同じ配列かもしれないが)
+
+        // そこで、count分だけループして addFrame する
+        for (int i = 1; i <= count; i++) {
+            String key = type + "_" + motionType + i;
+            TextureRegion[] frames = textureMap.get(key);
+            if (frames != null) {
+                animator.addFrame(motionType, frames);
             }
         }
     }
 
     // ========================================================================
-    //  メインループ (Update & Render)
+    // メインループ (Update & Render)
     // ========================================================================
 
     @Override
@@ -186,7 +477,7 @@ public class VisualCombatScreen implements Screen {
         // ダメージポップアップの更新
         floatingTextManager.update(delta);
 
-        drawBattleScene();
+        drawBattleScene(delta);
 
         if (cutInManager.isActive()) {
             cutInManager.update(delta);
@@ -197,24 +488,58 @@ public class VisualCombatScreen implements Screen {
             return;
         }
 
+        // Lucky Time Logic
+        if (isLuckyTimeActive) {
+            updateLuckyTime(delta);
+            drawLuckyTime();
+            return; // Skip normal update while lucky time is showing
+        }
+
         if (combatManager.isBattleActive()) {
             turnDelay += delta;
+            // Check for Lucky Time Trigger every 3 turns (approx, logic needs refine)
+            // Better: Check at start of new turn before prepareTurn.
+            // Using a simple turn counter in render might be sporadic.
+            // Ideally trigger it when turnDelay is finished, BEFORE prepareTurn.
             if (turnDelay >= TURN_DURATION) {
+
+                // Trigger Lucky Time? (Once every 3 moves for demonstration logic)
+                totalTurnCounter++;
+                // "Sometimes" -> 1/3 ~ 1/4 turns. Let's use % 4 == 0.
+                if (totalTurnCounter % 4 == 0) {
+                    startLuckyTime();
+                    turnDelay = 0; // consumed by lucky time start
+                    return; // Wait for next loop
+                }
+
                 turnDelay = 0;
                 prepareTurn();
             }
+        }
+
+        stateTime += delta;
+        for (CharacterAnimator animator : animatorMap.values()) {
+            animator.update(delta);
         }
     }
 
     private void prepareTurn() {
         ICombatant actor = combatManager.getCurrentActor();
-        if (actor == null) return;
-        Texture actorTexture = getCombatantTexture(actor);
-        cutInManager.start(actor, actorTexture);
+        if (actor == null)
+            return;
+        String actorKey;
+        if (party.contains(actor)) {
+            actorKey = "party_" + party.indexOf(actor);
+        } else {
+            actorKey = "enemy_" + enemies.indexOf(actor);
+        }
+        TextureRegion actorTextureRegion = getAnimatorTexture(actorKey);
+        cutInManager.start(actor, actorTextureRegion);
     }
 
     private void executeTurnAction(ICombatant actor) {
-        if (actor == null || !actor.isAlive()) return;
+        if (actor == null || !actor.isAlive())
+            return;
 
         boolean isPartyMember = party.contains(actor);
         List<ICombatant> targets = isPartyMember ? combatManager.getEnemies() : combatManager.getParty();
@@ -240,14 +565,26 @@ public class VisualCombatScreen implements Screen {
                 floatingTextManager.add(popupX, popupY, String.valueOf(damage), Color.RED);
             }
             // ---------------------------------
+
+            // 死亡判定とクエスト通知
+            if (!target.isAlive()) {
+                addLog(target.getName() + " is defeated!");
+                if (game.getGameState() != null && game.getGameState().questManager != null) {
+                    // IDや種別判定があればベストだが、名前で判定する
+                    // "KILL_" + Name
+                    String condition = "KILL_" + target.getName();
+                    System.out.println("Quest Condition Trigger: " + condition);
+                    game.getGameState().questManager.checkProgress(condition);
+                }
+            }
         }
     }
 
     // ========================================================================
-    //  描画ヘルパー
+    // 描画ヘルパー
     // ========================================================================
 
-    private void drawBattleScene() {
+    private void drawBattleScene(float delta) {
         batch.begin();
 
         // ヘッダー
@@ -266,22 +603,72 @@ public class VisualCombatScreen implements Screen {
         floatingTextManager.draw(batch, font);
 
         // リザルト
+        // リザルト
         if (!combatManager.isBattleActive()) {
             drawBattleResult();
+
+            // Click handling
+            // If VICTORY, allow click to end battle
+            if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+                if (Gdx.input.justTouched()) {
+                    endBattle();
+                }
+            }
+            // If DEFEAT, do NOT allow exit (Stay in battle screen as requested)
+            else if (combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+                // Do nothing, effectively trapping the user
+            }
         }
 
         batch.end();
 
         // HPバーの描画
         drawOverheadHPBars();
+
+        // デバッグUI
+        uiStage.act(delta);
+        uiStage.draw();
+    }
+
+    private void endBattle() {
+        // Check if Demon King was defeated
+        boolean isBossBattle = false;
+        for (ICombatant e : enemies) {
+            if ("demon_king".equals(e.getTextureKey())) {
+                isBossBattle = true;
+                break;
+            }
+        }
+
+        if (isBossBattle
+                && combatManager.getBattleState() == com.teamname.world.combat.CombatManager.BattleState.VICTORY) {
+            if (game.getGameState() != null) {
+                game.getGameState().setFlag("BOSS_DEFEATED", 1);
+            }
+        }
+
+        // バトルフラグを降ろす
+        if (game != null) {
+            game.battleflag = 0;
+            // BGMをフィールドに戻す
+            game.getAudioManager().playBgm("field.mp3", true);
+        }
     }
 
     private void drawGroup(List<ICombatant> group, String keyPrefix) {
         for (int i = 0; i < group.size(); i++) {
             ICombatant member = group.get(i);
             CharacterAnimator animator = animatorMap.get(keyPrefix + i);
-            if (animator != null && member.isAlive()) {
-                animator.draw(batch);
+            if (animator != null) {
+                if (member.isAlive()) {
+                    // System.out.println("DEBUG: Drawing " + keyPrefix + i + " at " +
+                    // animator.displayX + "," + animator.displayY);
+                    animator.draw(batch);
+                } else {
+                    // System.out.println("DEBUG: " + keyPrefix + i + " is dead.");
+                }
+            } else {
+                System.out.println("DEBUG: No animator for " + keyPrefix + i);
             }
         }
     }
@@ -301,12 +688,14 @@ public class VisualCombatScreen implements Screen {
     private void drawLabelsForGroup(List<ICombatant> group, String keyPrefix) {
         for (int i = 0; i < group.size(); i++) {
             ICombatant member = group.get(i);
-            if (!member.isAlive()) continue;
+            if (!member.isAlive())
+                continue;
 
             CharacterAnimator animator = animatorMap.get(keyPrefix + i);
             if (animator != null) {
-                // 名前 (HP/MaxHP) の形式に変更
-                String labelText = member.getName() + " (" + member.getCurrentHP() + "/" + member.getMaxHP() + ")";
+                // 名前 Lv (HP/MaxHP) MP: (MP/MaxMP) の形式に変更
+                String labelText = member.getName() + " Lv." + member.getLevel() + " HP " + member.getCurrentHP() + "/"
+                        + member.getMaxHP() + " MP " + member.getCurrentMP();
 
                 float textX = animator.displayX;
                 float textY = animator.displayY + animator.height + HP_BAR_OFFSET + HP_BAR_HEIGHT + 20;
@@ -323,7 +712,8 @@ public class VisualCombatScreen implements Screen {
     private void drawHPBarsForGroup(List<ICombatant> group, String keyPrefix) {
         for (int i = 0; i < group.size(); i++) {
             ICombatant member = group.get(i);
-            if (!member.isAlive()) continue;
+            if (!member.isAlive())
+                continue;
 
             CharacterAnimator animator = animatorMap.get(keyPrefix + i);
             if (animator != null) {
@@ -343,9 +733,12 @@ public class VisualCombatScreen implements Screen {
         shapeRenderer.rect(x, y, width, height);
 
         float hpPercent = (float) combatant.getCurrentHP() / combatant.getMaxHP();
-        if (hpPercent > 0.5f) shapeRenderer.setColor(Color.GREEN);
-        else if (hpPercent > 0.25f) shapeRenderer.setColor(Color.YELLOW);
-        else shapeRenderer.setColor(Color.RED);
+        if (hpPercent > 0.5f)
+            shapeRenderer.setColor(Color.GREEN);
+        else if (hpPercent > 0.25f)
+            shapeRenderer.setColor(Color.YELLOW);
+        else
+            shapeRenderer.setColor(Color.RED);
 
         shapeRenderer.rect(x, y, width * hpPercent, height);
         shapeRenderer.end();
@@ -358,24 +751,38 @@ public class VisualCombatScreen implements Screen {
 
     private void drawBattleResult() {
         font.getData().setScale(3.0f);
-        font.setColor(Color.GOLD);
-        String result = combatManager.getBattleState().toString();
+
+        com.teamname.world.combat.CombatManager.BattleState state = combatManager.getBattleState();
+        String result = state.toString();
+
+        if (state == com.teamname.world.combat.CombatManager.BattleState.DEFEAT) {
+            font.setColor(Color.RED);
+            result = "GAME OVER";
+        } else {
+            font.setColor(Color.GOLD);
+            result = "VICTORY";
+        }
+
         GlyphLayout layout = new GlyphLayout(font, result);
         font.draw(batch, result, (Gdx.graphics.getWidth() - layout.width) / 2, Gdx.graphics.getHeight() / 2);
         font.getData().setScale(1.5f);
     }
 
     // ========================================================================
-    //  ユーティリティ
+    // ユーティリティ
     // ========================================================================
 
-    private Texture createPlaceholderTexture() {
-        Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.GRAY);
-        pixmap.fillRectangle(0, 0, 64, 64);
-        Texture texture = new Texture(pixmap);
-        pixmap.dispose();
-        return texture;
+    private TextureRegion[] createPlaceholderTexture() {
+        if (!textureMap.containsKey("placeholder")) {
+            Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
+            pixmap.setColor(Color.MAGENTA);
+            pixmap.fill();
+            Texture texture = new Texture(pixmap);
+            rawTextures.put("placeholder_raw", texture);
+            pixmap.dispose();
+            textureMap.put("placeholder", new TextureRegion[] { new TextureRegion(texture) });
+        }
+        return textureMap.get("placeholder");
     }
 
     private void addLog(String message) {
@@ -385,13 +792,7 @@ public class VisualCombatScreen implements Screen {
         }
     }
 
-    private Texture getCombatantTexture(ICombatant combatant) {
-        String key;
-        if (party.contains(combatant)) {
-            key = "party_" + party.indexOf(combatant);
-        } else {
-            key = "enemy_" + enemies.indexOf(combatant);
-        }
+    private TextureRegion getAnimatorTexture(String key) {
         CharacterAnimator animator = animatorMap.get(key);
         return (animator != null) ? animator.getIdleTexture() : null;
     }
@@ -405,27 +806,60 @@ public class VisualCombatScreen implements Screen {
         }
         CharacterAnimator animator = animatorMap.get(key);
         if (animator != null) {
-            if (state == CharacterAnimator.AnimationState.ATTACKING) animator.playAttackMotion();
-            else if (state == CharacterAnimator.AnimationState.HURT) animator.playHurtMotion();
+            if (state == CharacterAnimator.AnimationState.ATTACKING)
+                animator.playAttackMotion();
+            else if (state == CharacterAnimator.AnimationState.HURT)
+                animator.playHurtMotion();
         }
     }
 
-    @Override public void show() {}
-    @Override public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override
+    public void show() {
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        if (uiStage != null) {
+            uiStage.getViewport().update(width, height, true);
+        }
+
+        // キャラクター位置の再計算
+        for (CharacterAnimator animator : animatorMap.values()) {
+            animator.updatePositionOnResize(width, height);
+        }
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
+
+    @Override
+    public void hide() {
+    }
 
     @Override
     public void dispose() {
         batch.dispose();
         font.dispose();
         shapeRenderer.dispose();
-        for (Texture t : textureMap.values()) t.dispose();
+        if (rawTextures != null) {
+            for (Texture t : rawTextures.values()) {
+                t.dispose();
+            }
+            rawTextures.clear();
+        }
+        if (uiStage != null)
+            uiStage.dispose();
+        if (skin != null)
+            skin.dispose();
     }
 
     // ========================================================================
-    //  内部クラス: ダメージポップアップ管理 (FloatingTextManager)
+    // 内部クラス: ダメージポップアップ管理 (FloatingTextManager)
     // ========================================================================
 
     private class FloatingTextManager {
@@ -484,7 +918,7 @@ public class VisualCombatScreen implements Screen {
     }
 
     // ========================================================================
-    //  内部クラス: カットイン管理
+    // 内部クラス: カットイン管理
     // ========================================================================
 
     private class CutInManager {
@@ -492,10 +926,10 @@ public class VisualCombatScreen implements Screen {
         private float timer = 0;
         private static final float DURATION = 1.5f;
         private ICombatant pendingActor;
-        private Texture currentTexture;
+        private TextureRegion currentTexture;
         private String currentText;
 
-        public void start(ICombatant actor, Texture texture) {
+        public void start(ICombatant actor, TextureRegion texture) {
             this.pendingActor = actor;
             this.currentTexture = texture;
             this.currentText = actor.getName() + "\nATTACK!";
@@ -504,7 +938,8 @@ public class VisualCombatScreen implements Screen {
         }
 
         public void update(float delta) {
-            if (!active) return;
+            if (!active)
+                return;
             timer += delta;
             if (timer >= DURATION) {
                 active = false;
@@ -512,7 +947,8 @@ public class VisualCombatScreen implements Screen {
         }
 
         public void draw(SpriteBatch batch, ShapeRenderer shapes, BitmapFont font) {
-            if (!active) return;
+            if (!active)
+                return;
 
             Gdx.gl.glEnable(GL20.GL_BLEND);
             shapes.begin(ShapeRenderer.ShapeType.Filled);
@@ -524,8 +960,8 @@ public class VisualCombatScreen implements Screen {
 
             if (currentTexture != null) {
                 float scale = 4.0f;
-                float w = currentTexture.getWidth() * scale;
-                float h = currentTexture.getHeight() * scale;
+                float w = currentTexture.getRegionWidth() * scale;
+                float h = currentTexture.getRegionHeight() * scale;
 
                 boolean isParty = party.contains(pendingActor);
                 float startX = isParty ? -200 : Gdx.graphics.getWidth() + 200;
@@ -555,22 +991,31 @@ public class VisualCombatScreen implements Screen {
             batch.end();
         }
 
-        public boolean isActive() { return active; }
-        public ICombatant getPendingActor() { return pendingActor; }
+        public boolean isActive() {
+            return active;
+        }
+
+        public ICombatant getPendingActor() {
+            return pendingActor;
+        }
     }
 
     // ========================================================================
-    //  内部クラス: キャラクターアニメーター
+    // 内部クラス: キャラクターアニメーター
+    // ========================================================================
+
+    // ========================================================================
+    // 内部クラス: キャラクターアニメーター
     // ========================================================================
 
     private static class CharacterAnimator {
-        List<Texture> idleFrames = new ArrayList<>();
-        List<Texture> attackFrames = new ArrayList<>();
-        List<Texture> walkFrames = new ArrayList<>();
-        List<Texture> hurtFrames = new ArrayList<>();
-        List<Texture> jumpFrames = new ArrayList<>();
+        List<TextureRegion> idleFrames = new ArrayList<>();
+        List<TextureRegion> attackFrames = new ArrayList<>();
+        List<TextureRegion> walkFrames = new ArrayList<>();
+        List<TextureRegion> hurtFrames = new ArrayList<>();
+        List<TextureRegion> jumpFrames = new ArrayList<>();
 
-        Texture currentTexture;
+        TextureRegion currentTexture;
         float baseX, baseY;
         float displayX, displayY;
         float width, height;
@@ -586,33 +1031,88 @@ public class VisualCombatScreen implements Screen {
 
         float rotationAngle, rotationTimer;
 
-        enum AnimationState { IDLE, ATTACKING, WALKING, HURT, JUMPING }
+        enum AnimationState {
+            IDLE, ATTACKING, WALKING, HURT, JUMPING
+        }
 
-        CharacterAnimator(Texture idleTexture, float x, float y, float w, float h) {
-            this.idleFrames.add(idleTexture);
-            this.currentTexture = idleTexture;
+        float scale = 1.0f;
+
+        // リサイズ用データ
+        float ratioX, ratioY;
+        int index;
+
+        CharacterAnimator(TextureRegion[] idleFramesArray, float x, float y, float w, float h) {
+            if (idleFramesArray != null) {
+                for (TextureRegion r : idleFramesArray) {
+                    this.idleFrames.add(r);
+                }
+            }
+            this.currentTexture = !idleFrames.isEmpty() ? idleFrames.get(0) : null;
             this.baseX = this.displayX = x;
             this.baseY = this.displayY = y;
             this.width = w;
             this.height = h;
         }
 
-        void addFrame(String type, Texture texture) {
-            switch (type.toLowerCase()) {
-                case "idle": idleFrames.add(texture); break;
-                case "attack": attackFrames.add(texture); break;
-                case "walk": walkFrames.add(texture); break;
-                case "hurt": hurtFrames.add(texture); break;
-                case "jump": jumpFrames.add(texture); break;
+        void setScale(float scale) {
+            this.scale = scale;
+        }
+
+        void setPositionRatios(float rx, float ry, int idx) {
+            this.ratioX = rx;
+            this.ratioY = ry;
+            this.index = idx;
+        }
+
+        void updatePositionOnResize(int width, int height) {
+            // 基本位置を再計算
+            this.baseX = width * ratioX;
+            this.baseY = height * ratioY - index * Y_OFFSET; // Y_OFFSETは固定値のままだが、必要ならここも比率に
+
+            // アニメーションなどで動いていなければdisplayも更新
+            if (!isMoving) {
+                this.displayX = this.baseX;
+                this.displayY = this.baseY;
             }
         }
 
-        Texture getIdleTexture() {
+        void addFrame(String type, TextureRegion[] frames) {
+            if (frames == null)
+                return;
+            switch (type.toLowerCase()) {
+                case "idle":
+                    for (TextureRegion r : frames)
+                        idleFrames.add(r);
+                    break;
+                case "attack":
+                    for (TextureRegion r : frames)
+                        attackFrames.add(r);
+                    break;
+                case "walk":
+                    for (TextureRegion r : frames)
+                        walkFrames.add(r);
+                    break;
+                case "hurt":
+                    for (TextureRegion r : frames)
+                        hurtFrames.add(r);
+                    break;
+                case "jump":
+                    for (TextureRegion r : frames)
+                        jumpFrames.add(r);
+                    break;
+            }
+        }
+
+        TextureRegion getIdleTexture() {
             return !idleFrames.isEmpty() ? idleFrames.get(0) : currentTexture;
         }
 
         void draw(SpriteBatch batch) {
-            batch.draw(currentTexture, displayX, displayY, width / 2, height / 2, width, height, 1, 1, rotationAngle, 0, 0, currentTexture.getWidth(), currentTexture.getHeight(), false, false);
+            if (currentTexture == null)
+                return;
+            // TextureRegionを正しく描画するために width/height を参照しつつ、Regionのサイズも考慮
+            batch.draw(currentTexture, displayX, displayY, width / 2, height / 2, width, height, scale, scale,
+                    rotationAngle);
         }
 
         void update(float delta) {
@@ -622,7 +1122,8 @@ public class VisualCombatScreen implements Screen {
         }
 
         private void updateMovement(float delta) {
-            if (!isMoving) return;
+            if (!isMoving)
+                return;
             moveTimer += delta;
             float progress = Math.min(moveTimer / moveDuration, 1.0f);
             float ease = Interpolation.sine.apply(progress);
@@ -632,7 +1133,8 @@ public class VisualCombatScreen implements Screen {
 
             if (progress >= 1.0f) {
                 isMoving = false;
-                displayX = baseX; displayY = baseY;
+                displayX = baseX;
+                displayY = baseY;
                 if (animState == AnimationState.ATTACKING || animState == AnimationState.HURT) {
                     setAnimationState(AnimationState.IDLE);
                 }
@@ -642,7 +1144,7 @@ public class VisualCombatScreen implements Screen {
         private void updateRotation(float delta) {
             if (rotationTimer > 0) {
                 rotationTimer -= delta;
-                rotationAngle = (float)Math.sin(rotationTimer * 20) * 5;
+                rotationAngle = (float) Math.sin(rotationTimer * 20) * 5;
             } else {
                 rotationAngle = 0;
             }
@@ -650,8 +1152,9 @@ public class VisualCombatScreen implements Screen {
 
         private void updateFrames(float delta) {
             frameTime += delta;
-            List<Texture> frames = getFramesForState(animState);
-            if (frames.isEmpty()) return;
+            List<TextureRegion> frames = getFramesForState(animState);
+            if (frames.isEmpty())
+                return;
 
             if (frameTime >= FRAME_DURATION) {
                 frameTime -= FRAME_DURATION;
@@ -666,12 +1169,16 @@ public class VisualCombatScreen implements Screen {
             currentTexture = frames.get(currentFrame);
         }
 
-        private List<Texture> getFramesForState(AnimationState state) {
+        private List<TextureRegion> getFramesForState(AnimationState state) {
             switch (state) {
-                case ATTACKING: return attackFrames.isEmpty() ? idleFrames : attackFrames;
-                case WALKING: return walkFrames.isEmpty() ? idleFrames : walkFrames;
-                case HURT: return hurtFrames.isEmpty() ? idleFrames : hurtFrames;
-                default: return idleFrames;
+                case ATTACKING:
+                    return attackFrames.isEmpty() ? idleFrames : attackFrames;
+                case WALKING:
+                    return walkFrames.isEmpty() ? idleFrames : walkFrames;
+                case HURT:
+                    return hurtFrames.isEmpty() ? idleFrames : hurtFrames;
+                default:
+                    return idleFrames;
             }
         }
 
@@ -684,8 +1191,10 @@ public class VisualCombatScreen implements Screen {
         }
 
         void moveTo(float tx, float ty, float dur) {
-            this.moveStartX = displayX; this.moveStartY = displayY;
-            this.moveTargetX = tx; this.moveTargetY = ty;
+            this.moveStartX = displayX;
+            this.moveStartY = displayY;
+            this.moveTargetX = tx;
+            this.moveTargetY = ty;
             this.moveDuration = dur;
             this.moveTimer = 0;
             this.isMoving = true;

@@ -18,6 +18,31 @@
     "name": "ひのきのぼう",
     "description": "いちばんよわい こんぼう。",
     "type": "WEAPON",
-    "value": 15
+    "value": 15,
+    "power": 5
+  },
+  {
+    "id": 4,
+    "name": "どうのつるぎ",
+    "description": "どうで作られた つるぎ。",
+    "type": "WEAPON",
+    "value": 100,
+    "power": 12
+  },
+  {
+    "id": 5,
+    "name": "かわのよろい",
+    "description": "かわで作られた よろい。",
+    "type": "ARMOR",
+    "value": 80,
+    "defense": 5
+  },
+  {
+    "id": 6,
+    "name": "てつのよろい",
+    "description": "てつで作られた かたいよろい。",
+    "type": "ARMOR",
+    "value": 300,
+    "defense": 15
   }
 ]
