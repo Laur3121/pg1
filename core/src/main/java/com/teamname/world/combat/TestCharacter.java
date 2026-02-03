@@ -57,7 +57,6 @@ public class TestCharacter implements ICombatant {
         if (currentHP < 0) {
             currentHP = 0;
         }
-        // System.out.println(name + " HP: " + currentHP + "/" + maxHP);
     }
 
     @Override
@@ -66,32 +65,54 @@ public class TestCharacter implements ICombatant {
         if (currentHP > maxHP) {
             currentHP = maxHP;
         }
-        // System.out.println(name + " HP: " + currentHP + "/" + maxHP);
-    }
-
-    @Override
-    public int getSpeed() {
-        return speed;
-    }
-
-    @Override
-    public int getAttackPower() {
-        return attackPower;
-    }
-
-    @Override
-    public int getDefense() {
-        return defense;
     }
 
     @Override
     public String getTextureKey() {
-        return "warrior"; // テスト用デフォルト
+        return "1";
     }
 
     @Override
-    public String toString() {
-        return name + " [HP:" + currentHP + "/" + maxHP + " ATK:" + attackPower + " DEF:" + defense + " SPD:" + speed
-                + "]";
+    public int getCurrentMP() {
+        return 0;
+    }
+
+    @Override
+    public int getMaxMP() {
+        return 0;
+    }
+
+    @Override
+    public int getLevel() {
+        return 1;
+    }
+
+    @Override
+    public int getPower() {
+        return attackPower;
+    }
+
+    @Override
+    public int getBlock() {
+        return defense;
+    }
+
+    @Override
+    public int getLucky() {
+        return 0;
+    }
+
+    @Override
+    public int getQuick() {
+        return speed;
+    }
+
+    @Override
+    public int getExp() {
+        return 0;
+    }
+
+    @Override
+    public void gainExp(int exp) {
     }
 }

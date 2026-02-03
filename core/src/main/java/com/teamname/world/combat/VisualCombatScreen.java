@@ -522,8 +522,9 @@ public class VisualCombatScreen implements Screen {
 
             CharacterAnimator animator = animatorMap.get(keyPrefix + i);
             if (animator != null) {
-                // 名前 (HP/MaxHP) の形式に変更
-                String labelText = member.getName() + " (" + member.getCurrentHP() + "/" + member.getMaxHP() + ")";
+                // 名前 Lv (HP/MaxHP) MP: (MP/MaxMP) の形式に変更
+                String labelText = member.getName() + " Lv." + member.getLevel() + " HP " + member.getCurrentHP() + "/"
+                        + member.getMaxHP() + " MP " + member.getCurrentMP();
 
                 float textX = animator.displayX;
                 float textY = animator.displayY + animator.height + HP_BAR_OFFSET + HP_BAR_HEIGHT + 20;

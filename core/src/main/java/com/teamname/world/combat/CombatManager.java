@@ -182,7 +182,7 @@ public class CombatManager {
         ICombatant target = targets.get(0);
 
         // ダメージ計算(簡易版)
-        int damage = Math.max(1, actor.getAttackPower() - target.getDefense());
+        int damage = Math.max(1, actor.getPower() - target.getBlock());
 
         target.takeDamage(damage);
         // System.out.println(target.getName() + ":" + damage + " dameges");

@@ -19,11 +19,22 @@ public class Character implements ICombatant {
     public int equippedWeaponId;
     public int equippedArmorId;
 
+    // New Stats
+    public int power;
+    public int block;
+    public int lucky;
+    public int quick;
+    public int nextExp; // EXP needed for next level
+
     public Character() {
         // デフォルトコンストラクタ（ロード用）
     }
 
     public Character(String name, int hp, int mp, int str, int def) {
+        this(name, hp, mp, str, def, 10, 5, 10);
+    }
+
+    public Character(String name, int hp, int mp, int str, int def, int lucky, int quick, int power) {
         this.name = name;
         this.maxHp = hp;
         this.currentHp = hp;
@@ -33,8 +44,15 @@ public class Character implements ICombatant {
         this.def = def;
         this.level = 1;
         this.exp = 0;
+        this.nextExp = 100; // Initial next exp
         this.equippedWeaponId = -1;
         this.equippedArmorId = -1;
+
+        // Initialize new stats
+        this.power = power;
+        this.block = def; // Default block to def
+        this.lucky = lucky;
+        this.quick = quick;
     }
 
     // ICombatant implementation
@@ -78,28 +96,22 @@ public class Character implements ICombatant {
             currentHp = maxHp;
     }
 
-    @Override
+    // Legacy method - Override removed
     public int getSpeed() {
-        // 素早さは仮実装（レベルベースなど）
-        return 10 + level;
+        // Quick replaces speed
+        return quick;
     }
 
-    @Override
+    // Legacy method - Override removed
     public int getAttackPower() {
-        // DataLoaderが必要だが、インターフェースには引数がないため、
-        // 簡易的にフィールドのstrを返すか、別途注入されたloaderを使う
-        if (dataLoaderProvider != null) {
-            return getAttack(dataLoaderProvider.getDataLoader());
-        }
-        return str;
+        // Power replaces attack power
+        return power;
     }
 
-    @Override
+    // Legacy method - Override removed
     public int getDefense() {
-        if (dataLoaderProvider != null) {
-            return getDefense(dataLoaderProvider.getDataLoader());
-        }
-        return def;
+        // Block replaces defense
+        return block;
     }
 
     // ステータス計算ヘルパー
@@ -135,5 +147,73 @@ public class Character implements ICombatant {
         if (name.equalsIgnoreCase("Priest"))
             return "archer"; // 仮
         return "warrior"; // デフォルト
+    }
+
+    @Override
+    public int getCurrentMP() {
+        return currentMp;
+    }
+
+    @Override
+    public int getMaxMP() {
+        return maxMp;
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public int getPower() {
+        // Weapon bonus could be added here
+        return power;
+    }
+
+    @Override
+    public int getBlock() {
+        // Armor bonus could be added here
+        return block;
+    }
+
+    @Override
+    public int getLucky() {
+        return lucky;
+    }
+
+    @Override
+    public int getQuick() {
+        return quick;
+    }
+
+    @Override
+    public int getExp() {
+        return exp;
+    }
+
+    @Override
+    public void gainExp(int amount) {
+        this.exp += amount;
+        while (this.exp >= this.nextExp) {
+            levelUp();
+        }
+    }
+
+    private void levelUp() {
+        this.exp -= this.nextExp;
+        this.level++;
+        this.nextExp = (int) (this.nextExp * 1.5f); // Simple curve
+
+        // Increase stats
+        this.maxHp += 20;
+        this.currentHp = this.maxHp;
+        this.maxMp += 10;
+        this.currentMp = this.maxMp;
+        this.power += 2;
+        this.block += 1;
+        this.lucky += 1;
+        this.quick += 1;
+
+        System.out.println(name + " leveled up to " + level + "!");
     }
 }

@@ -49,30 +49,28 @@ public interface ICombatant {
     void heal(int amount);
 
     /**
-     * 素早さを取得(ターン順決定に使用)
-     * 
-     * @return 素早さ
-     */
-    int getSpeed();
-
-    /**
-     * 攻撃力を取得
-     * 
-     * @return 攻撃力
-     */
-    int getAttackPower();
-
-    /**
-     * 防御力を取得
-     * 
-     * @return 防御力
-     */
-    int getDefense();
-
-    /**
      * 描画用のテクスチャキーを取得
      * 
      * @return テクスチャキー (例: "warrior", "1", "2")
      */
     String getTextureKey();
+
+    // New Stats Methods
+    int getCurrentMP();
+
+    int getMaxMP();
+
+    int getLevel();
+
+    int getPower();
+
+    int getBlock();
+
+    int getLucky();
+
+    int getQuick();
+
+    void gainExp(int exp);
+
+    int getExp();
 }

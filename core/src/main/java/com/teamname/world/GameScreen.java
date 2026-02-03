@@ -77,6 +77,9 @@ public class GameScreen implements Screen {
     private Label gameClearLabel;
     private BitmapFont gameClearFont;
 
+    // Added Field
+    private Label levelLabel;
+
     public GameScreen(AdventureRPG game) {
         this.game = game;
     }
@@ -134,7 +137,7 @@ public class GameScreen implements Screen {
         miniMapImage = new Image();
         miniMapImage.setSize(miniWidth, miniHeight);
         miniMapImage.setPosition(screenW - miniWidth, screenH - miniHeight);
-        stage.addActor(miniMapImage);
+        stage.addActor(miniMapImage); // This line was incomplete in the user's provided snippet, but is now fixed.
 
         // Game Clear Label
         gameClearFont = FontSystem.createJapaneseFont(64);
@@ -142,6 +145,12 @@ public class GameScreen implements Screen {
         gameClearLabel = new Label("GAME CLEAR", labelStyle);
         gameClearLabel.setVisible(false);
         uiTable.add(gameClearLabel).center();
+
+        // Level Label (Top-Left)
+        Label.LabelStyle levelStyle = new Label.LabelStyle(gameClearFont, Color.WHITE);
+        levelLabel = new Label("Lv.1", levelStyle);
+        levelLabel.setPosition(20, Gdx.graphics.getHeight() - 50);
+        stage.addActor(levelLabel);
 
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
@@ -347,6 +356,17 @@ public class GameScreen implements Screen {
         if (game.getUIManager() != null) {
             game.getUIManager().updateAndRender(delta);
         }
+
+        // Update Level Label
+        com.teamname.world.system.Character leader = game.getGameState().getLeader();
+        if (leader != null && levelLabel != null) {
+            levelLabel.setText(leader.getName() + " Lv." + leader.getLevel());
+            // levelLabel.setPosition(20, Gdx.graphics.getHeight() - 50); // Optional update
+            // if needed
+        } // new one.
+          // Actually, UIManager usually handles all UI. But requested to add to Field
+          // Screen specifically.
+          // Let's use `gameClearFont` scaled down if no other font.
     }
 
     @Override
