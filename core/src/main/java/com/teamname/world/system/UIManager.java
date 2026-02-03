@@ -24,6 +24,7 @@ public class UIManager {
     private com.teamname.world.system.ui.StatusUI statusUI;
     private com.teamname.world.system.ui.SaveUI saveUI;
     private com.teamname.world.system.ui.DebugUI debugUI;
+    private com.teamname.world.system.ui.QuestLogUI questLogUI; // Added
 
     public UIManager(AdventureRPG game) {
         this.game = game;
@@ -35,6 +36,7 @@ public class UIManager {
         this.statusUI = new com.teamname.world.system.ui.StatusUI(game);
         this.saveUI = new com.teamname.world.system.ui.SaveUI(game);
         this.debugUI = new com.teamname.world.system.ui.DebugUI(game);
+        this.questLogUI = new com.teamname.world.system.ui.QuestLogUI(game); // Added
     }
 
     // --- 各画面の表示メソッド (MenuTabから呼ばれる) ---
@@ -67,6 +69,10 @@ public class UIManager {
         if (!shopUI.isVisible())
             shopUI.show();
     }
+    
+    public void toggleQuestLog() {
+        questLogUI.toggle();
+    }
 
     // --- 会話関連 ---
     public void showDialog(String text) {
@@ -75,6 +81,10 @@ public class UIManager {
 
     public void showDialog(String name, String text) {
         dialogUI.showDialog(name, text);
+    }
+    
+    public void showDialogWithOptions(String name, String text, java.util.List<com.teamname.world.system.event.DialogOption> options, com.teamname.world.system.event.EventManager eventManager) {
+        dialogUI.showDialogWithOptions(name, text, options, eventManager);
     }
 
     public DialogUI getDialogUI() {
@@ -151,6 +161,9 @@ public class UIManager {
             else
                 debugUI.show();
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            toggleQuestLog();
+        }
 
         // 各UIの描画 (順序注意: 後に描くほうが手前)
         if (menuTab != null)
@@ -167,6 +180,8 @@ public class UIManager {
             shopUI.updateAndRender(delta);
         if (dialogUI != null)
             dialogUI.updateAndRender(delta);
+        if (questLogUI != null)
+            questLogUI.updateAndRender(delta);
     }
 
     public void resize(int width, int height) {
@@ -184,6 +199,8 @@ public class UIManager {
             shopUI.resize(width, height);
         if (dialogUI != null)
             dialogUI.resize(width, height);
+        if (questLogUI != null)
+            questLogUI.resize(width, height);
     }
 
     public void dispose() {
@@ -201,6 +218,8 @@ public class UIManager {
             shopUI.dispose();
         if (dialogUI != null)
             dialogUI.dispose();
+        if (questLogUI != null)
+            questLogUI.dispose();
     }
 
     public boolean isAnyUIOpen() {
@@ -210,6 +229,7 @@ public class UIManager {
                 (saveUI != null && saveUI.isVisible()) ||
                 (debugUI != null && debugUI.isVisible()) ||
                 (shopUI != null && shopUI.isVisible()) ||
-                (dialogUI != null && dialogUI.isVisible());
+                (dialogUI != null && dialogUI.isVisible()) ||
+                (questLogUI != null && questLogUI.isVisible());
     }
 }

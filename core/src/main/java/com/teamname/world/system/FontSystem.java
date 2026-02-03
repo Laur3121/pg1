@@ -25,6 +25,7 @@ public class FontSystem {
         }
 
         if (fontFile.exists()) {
+            System.out.println("Using font: " + fontFile.path());
             generator = new FreeTypeFontGenerator(fontFile);
         } else {
             // 見つからない場合はデフォルト（文字化けするがエラー落ちよりマシ）
@@ -50,13 +51,12 @@ public class FontSystem {
                 "所持現在進行状況保存完了失敗壊復元" + // System messages
                 "主人公戦士僧侶" + // Classes
                 "武器防具" + // Item types
-                "HPMPLvExG"; // Stats
-
-        // すべての漢字を含めると重くなるので、使用する文字だけ追加するのが軽量です
-        // Google Fontsなどから .ttf をダウンロードして assets に入れるのが一番安全です。
+                "HPMPLvExG" + // Stats
+                "参北地巣食任準備頼期待来倒今依頼"; // Dialog specific ("倒" Added)
 
         BitmapFont font = generator.generateFont(parameter);
         generator.dispose(); // ジェネレーターはもう不要
         return font;
     }
 }
+

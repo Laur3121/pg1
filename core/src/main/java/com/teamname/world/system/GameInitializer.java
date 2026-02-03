@@ -60,7 +60,18 @@ public class GameInitializer {
         // 4. オーディオマネージャーの初期化
         game.setAudioManager(new AudioManager());
 
-        // 5. タイトル画面へ (ここではまだゲームデータはロードしない)
+        // 5. EventManagerの初期化
+        com.teamname.world.system.event.EventManager eventManager = new com.teamname.world.system.event.EventManager(game);
+        // dataLoaderからdialogDataを取得して渡す
+        eventManager.initialize(game.getGameState(), game.getUIManager(), dataLoader.dialogData);
+        game.getGameState().eventManager = eventManager;
+
+        // QuestManagerの初期化 (GameState内でnewされているが、DataLoaderを渡す必要がある)
+        if (game.getGameState().questManager != null) {
+            game.getGameState().questManager.initialize(dataLoader);
+        }
+
+        // 6. タイトル画面へ (ここではまだゲームデータはロードしない)
         game.setScreen(new TitleScreen(game));
     }
 
@@ -77,6 +88,17 @@ public class GameInitializer {
 
         GameState newState = new GameState();
         game.setGameState(newState);
+
+        // 必須: EventManagerの初期化 (以前のGameStateのものは破棄されているため再生成)
+        com.teamname.world.system.event.EventManager eventManager = new com.teamname.world.system.event.EventManager(game);
+        // DataLoaderは game.getDataLoader() から取得
+        eventManager.initialize(newState, game.getUIManager(), game.getDataLoader().dialogData);
+        newState.eventManager = eventManager;
+
+        // QuestManagerの初期化
+        if (newState.questManager != null) {
+            newState.questManager.initialize(game.getDataLoader());
+        }
 
         if (!isDebug && Gdx.files.local("data/save.dat").exists()) {
             // --- 続きから ---

@@ -430,6 +430,18 @@ public class VisualCombatScreen implements Screen {
                 floatingTextManager.add(popupX, popupY, String.valueOf(damage), Color.RED);
             }
             // ---------------------------------
+            
+            // 死亡判定とクエスト通知
+            if (!target.isAlive()) {
+                addLog(target.getName() + " is defeated!");
+                if (game.getGameState() != null && game.getGameState().questManager != null) {
+                    // IDや種別判定があればベストだが、名前で判定する
+                    // "KILL_" + Name
+                    String condition = "KILL_" + target.getName(); 
+                    System.out.println("Quest Condition Trigger: " + condition);
+                game.getGameState().questManager.checkProgress(condition);
+                }
+            }
         }
     }
 

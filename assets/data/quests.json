@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "title": "王様の依頼",
+    "description": "魔王を倒してくれと頼まれた。",
+    "steps": [
+      {
+        "condition": "TALK_KING",
+        "description": "王様から話を聞いた。",
+        "nextStepIndex": 1,
+        "rewardGold": 100,
+        "rewardExp": 50
+      },
+      {
+        "condition": "KILL_Demon King",
+        "description": "魔王(Demon King)を倒す。",
+        "nextStepIndex": -1,
+        "rewardGold": 5000,
+        "rewardExp": 10000
+      }
+    ]
+  }
+]
