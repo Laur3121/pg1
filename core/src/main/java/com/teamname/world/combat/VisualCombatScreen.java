@@ -150,10 +150,10 @@ public class VisualCombatScreen implements Screen {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        if (isLuckyJackpot) {
-            shapeRenderer.setColor(r, g, b, alpha); // Rainbow for Jackpot
+        if (isLuckyJackpot && luckyTimer >= 2.0f) {
+            shapeRenderer.setColor(r, g, b, alpha); // Rainbow for Jackpot (Confirmation Effect)
         } else {
-            shapeRenderer.setColor(1f, 1f, 0f, alpha); // Yellow for Chance
+            shapeRenderer.setColor(1f, 1f, 0f, alpha); // Yellow for Chance (Spinning)
         }
 
         shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -239,6 +239,12 @@ public class VisualCombatScreen implements Screen {
         uiStage.addActor(loseBtn);
 
         loadAssets();
+
+        try {
+            pachinkoMusic = Gdx.audio.newMusic(Gdx.files.internal("music/pachinko.mp3"));
+        } catch (Exception e) {
+            System.err.println("Failed to load pachinko.mp3: " + e.getMessage());
+        }
     }
 
     private void forceEndBattle(CombatManager.BattleState state) {
@@ -885,6 +891,8 @@ public class VisualCombatScreen implements Screen {
             uiStage.dispose();
         if (skin != null)
             skin.dispose();
+        if (pachinkoMusic != null)
+            pachinkoMusic.dispose();
     }
 
     // ========================================================================
