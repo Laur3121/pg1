@@ -44,5 +44,21 @@
     "type": "ARMOR",
     "value": 300,
     "defense": 15
+  },
+  {
+    "id": 7,
+    "name": "神の杖",
+    "description": "衛星軌道上から100KGのタングステンの杭を落とす戦略兵器。",
+    "type": "WEAPON",
+    "value": 100,
+    "power": 1000000
+  },
+  {
+    "id": 6,
+    "name": "原子核パスタ",
+    "description": "中性子星の内殻に存在するとされている縮退構造。鋼鉄の100億倍の強度がある。",
+    "type": "ARMOR",
+    "value": 100,
+    "defense": 3000000000000
   }
 ]
